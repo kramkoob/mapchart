@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+poppler-22.04.0/* linguist-vendored
+tabula-pc/* linguist-vendored
+tabula_edit/* linguist-vendored

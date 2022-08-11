@@ -1,5 +1,5 @@
-# pycourses - by Thomas Dodds
-# Scrape the internet! Retrieve and present up-to-date course and degree plan information from the Tech website.
+# mapchart - by Thomas Dodds
+# Create Visio files from online degree information
 
 # Libraries used:
 # * Requests.get - get documents from the internet
@@ -7,31 +7,25 @@
 # * Tabula - for PDF data table parsing (degree maps)
 #     Tabula has been MODIFIED to run with javaw instead of java (no pop-up window)
 #     This edit is included in the script folder
-# * SchemDraw.flow - for flowchart creation
 # * pdf2image.convert_from_bytes - convert degree map PDF to image
 # * Poppler - PDF renderer for pdf2image (included in script folder)
 # * io.BytesIO - save data files RAM
 # * os.getcwd - get working directory to find Poppler on Windows for pdf2image
 # * numpy - number/image manipulation, used with OpenCV
 # * cv2 - OpenCV, to identify PDF elements (corners)
-# * svglib - convert SVG to PNG
+# * vsdx - Visio library
 
 # The PC version of Tabula is included to easily figure out where lines and whatnot *should* be
 
 from requests import get
 from pyquery import PyQuery as pq
 import tabula_edit as tabula
-import schemdraw
-from schemdraw import flow
 from pdf2image import convert_from_bytes
 from io import BytesIO
 import os
-
 import numpy as np
 import cv2
-
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
+from vsdx import VisioFile
 
 CATALOG_URL = 'https://www.atu.edu/catalog/archive/descriptions/courses.php?catalog=U'
 DEGREEMAP_YEARS_URL = 'https://www.atu.edu/advising/degreemaps.php'
@@ -158,50 +152,32 @@ numsubj = 0
 numgen = 9
 delem = []
 
-with schemdraw.Drawing(show=False) as d:
-    d.config(fontsize=10, unit=1)
-    for x in lists:
-        y = str(x)
-        if y.startswith('Semester '):
-            cursem = int(x[9])
-            #print('Semester ' + str(cursem))
-            numsubj = 0
-            numgen = 0
-            d += flow.Terminal().label('Semester ' + str(cursem)).at((cursem * 4, 0))
-        elif not y.startswith('Total') and y!='nan':
-            if y.split()[0].isupper() and y.split()[1][0:4].isdigit():
-                subj = y.split()[0][-4:]
-                crn = str(y.split()[1])[0:4]
-                print(subj + ' ' + crn)
-                
-                numsubj = numsubj + 1
-                d += (elem := flow.RoundBox().label(subj + ' ' + crn).at((cursem * 4, numsubj * -2.5 + 1)))
-
-                
-                #delem.append(elem)
-            else:
-                
-                # the ampersand is a troublesome character. add \ before it
-                new_text = ''
-                for character in y:
-                    if ord(character) == 38:
-                        new_text += r"&amp;"
-                    else:
-                        new_text += character
-                
-                numgen = numgen + 1
-                d += flow.RoundBox().label(new_text).at((cursem * 4, numgen * 2.5 - 16.5))
-                #print(y)
-    
-    print(type(d.get_imagedata(fmt='svg')))
-    #img = svg2rlg(d.get_imagedata(fmt='svg'))
-
-with BytesIO() as file:
-    file.seek(0)
-    print(type(img))
-    renderPM.drawToFile(d.get_imagedata(fmt='svg'), file, fmt="PNG")
-    file.seek(0)
-    cv2.imshow(cv2.imdecode(np.frombuffer(file.read(), np.uint8), 1))
+for x in lists:
+    y = str(x)
+    if y.startswith('Semester '):
+        cursem = int(x[9])
+        print('Semester ' + str(cursem))
+        numsubj = 0
+        numgen = 0
+    elif not y.startswith('Total') and y!='nan':
+        if y.split()[0].isupper() and y.split()[1][0:4].isdigit():
+            subj = y.split()[0][-4:]
+            crn = str(y.split()[1])[0:4]
+            print(subj + ' ' + crn)
+            
+            numsubj = numsubj + 1
+        else:
+            
+            # the ampersand is a troublesome character. add \ before it
+            new_text = ''
+            for character in y:
+                if ord(character) == 38:
+                    new_text += r"&amp;"
+                else:
+                    new_text += character
+            
+            numgen = numgen + 1
+            print(y)
 
 #tags = pq(url=CATALOG_URL)
 #print(tags('a').filter(lambda i, this: (pq(this).text().startswith('(') and pq(this).text().endswith(')'))).text().split()[1])

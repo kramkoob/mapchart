@@ -13,7 +13,7 @@
 # * os.getcwd - get working directory to find Poppler on Windows for pdf2image
 # * numpy - number/image manipulation, used with OpenCV
 # * cv2 - OpenCV, to identify PDF elements (corners)
-# * vsdx - Visio library
+# * aspose-diagram - Visio library, uses Java
 
 # The PC version of Tabula is included to easily figure out where lines and whatnot *should* be
 
@@ -25,7 +25,10 @@ from io import BytesIO
 import os
 import numpy as np
 import cv2
-from vsdx import VisioFile
+import jpype
+import asposediagram
+jpype.startJVM()
+from asposediagram.api import *
 
 CATALOG_URL = 'https://www.atu.edu/catalog/archive/descriptions/courses.php?catalog=U'
 DEGREEMAP_YEARS_URL = 'https://www.atu.edu/advising/degreemaps.php'
@@ -183,3 +186,7 @@ for x in lists:
 #print(tags('a').filter(lambda i, this: (pq(this).text().startswith('(') and pq(this).text().endswith(')'))).text().split()[1])
 
 # course_url = CATALOG_URL + "&subj=" + course
+
+jpype.shutdownJVM()
+os.system("pause")
+

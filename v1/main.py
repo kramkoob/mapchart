@@ -92,18 +92,86 @@ class Degree():
 		self.name = name
 		self.url = SITE_PREFIX + url
 
+class SubjectIndex(hp):
+        # Contains all subjects.
+	def __init__(self):
+		hp.__init__(self)
+		self.url = SITE_PREFIX + CATALOG_COURSES_URL
+		self.subjects = []
+		
+		self.in_table = False
+		self.in_row = False
+		self.handle_prefix = False
+		self.handle_course = False
+		self.get_data = False
+
+	def find(self, query):
+		query = query.upper()
+		if " " in query:
+			query_split = query.split(" ", 1)
+			prefix = query_split[0]
+			number = int(query_split[1])
+
+			for ind, subject in enumerate(self.subjects):
+				if subject.prefix == prefix:
+					return subject.find(number)
+
+		else:
+			for ind, subject in enumerate(self.subjects):
+				if subject.prefix == query:
+					return subject
+	
+	def populate(self):
+		self.feed(requests.get(self.url).text)
+		# 1) Search for matching div that begins this content
+		# 2) Find next table row
+		# 3) First data cell has abbreviation
+		# 4) Second data cell has name. Return to # 2)
+		# 5) Stop searching by the end of the div
+		
+	def handle_starttag(self, tag, attrs):
+		self.in_table = (tag == "table" and attrs[1][1] == "courseList") or self.in_table
+		self.in_row = (tag == "tr" or self.in_row) and self.in_table
+		if(tag == "td"):
+			self.handle_prefix = not self.handle_prefix
+			self.handle_course = not self.handle_prefix
+		self.get_data = (self.handle_prefix or self.handle_course) and tag == "a"
+			
+	def handle_endtag(self, tag):
+		self.in_table = self.in_table and not tag == "table"
+		self.in_row = self.in_row and self.in_table and not tag == "tr"
+		self.handle_prefix = self.in_row and self.handle_prefix
+		self.handle_course = self.in_row and self.handle_course
+		self.get_data = self.get_data and not tag == "a"
+	
+	def handle_data(self, data):
+		if self.get_data:
+			if self.handle_prefix:
+				self.subjects.append(Subject(data.strip()[1:(len(data) - 1)]))
+			if self.handle_course:
+				self.subjects[len(self.subjects) - 1].name = data.strip()
+
 class Subject(hp):
+        # Contains courses in each subject, e.g. ELEG
 	# Subjects page is quite different from the catalog. And beyond that, different years have different layouts...
 	def __init__(self, prefix):
 		hp.__init__(self)
 		self.prefix = prefix.upper()
+		self.name = ""
 		self.url = SITE_PREFIX + CATALOG_COURSES_URL + prefix + CATALOG_COURSES_URL_END
 		self.courses = []
 		
 		self.search_for_data = False
 		self.handle_name = False
 		self.handle_course = False
-	
+		self.empty = False
+		
+	def find(self, query):
+		number = int(query)
+		for ind, course in enumerate(self.courses):
+			if course.number == number:
+				return course
+                              
 	def populate(self):
 		self.feed(requests.get(self.url).text)
 		# 1) Search for matching div that begins this content
@@ -111,6 +179,9 @@ class Subject(hp):
 		# 3) Find each medium header containing course number and name
 		# 4) Parse the text data under each medium header
 		# 5) Stop searching by the end of the div
+
+		if len(self.courses) == 0:
+			self.empty = True
 		
 	def handle_starttag(self, tag, attrs):
 		self.search_for_data = (tag == "div" and attrs[0][1] == "col-lg-8 mb-5") or self.search_for_data
@@ -127,19 +198,34 @@ class Subject(hp):
 			if self.handle_name:
 				self.name = data
 			if self.handle_course:
-				self.courses.append(Course())
+				course = Course(self.prefix)
+				course.set_number(data.split(":", 1)[0].split(" ", 1)[1])
+				course.set_name(data.split(":", 1)[1])
+				self.courses.append(course)
 
 class Course():
 	# A course. Variables are set as they're come across in the course description pages. Some won't be used e.g. prereqs
-	def __init__(self):
-		prereqs = []
-	def set_name(name):
-		self.name = name
-	def set_number(number):
-		self.number = number
-	def set_desc(desc):
-		self.desc = desc
-	def add_prereq(course):
+	def __init__(self, prefix):
+		self.prefix = prefix
+
+		self.prereqs = []
+		self.name = ""
+		self.number = 0
+		self.desc = ""
+	      
+	def set_name(self, name):
+		self.name = name.strip()
+	def set_number(self, number):
+		try:
+			self.number = int(number)
+		except:
+			try:
+				self.number = int(number[0] * 1000)
+			except:
+				self.number = -1
+	def set_desc(self, desc):
+		self.desc = descname.strip()
+	def add_prereq(self, course):
 		self.prereqs.append(course)
 	
 # Test get list of catalog years
@@ -147,18 +233,42 @@ catalog = Catalog()
 catalog.populate()
 
 # Test populating the most recent year
-catalogyear = catalog.catalogyears[0]
-print(catalogyear.url)
-catalogyear.populate()
-print(str(len(catalogyear.degrees)) + " degrees for " + catalogyear.year_formatted_long)
+#for catalogyear in catalog.catalogyears:
+#        catalogyear.populate()
+#        print(str(len(catalogyear.degrees)) + " degrees for " + catalogyear.year_formatted_long)
 
-# List all degree plans for most recent year
-for ind, degree in enumerate(catalogyear.degrees, start=1):
-	print(str(ind) + ") " + degree.name + " - " + degree.url + " ")
+# Test list all degree plans for most recent year
+#for ind, degree in enumerate(catalog.catalogyears[0].degrees, start=1):
+#	print(str(ind) + ") " + degree.name + " - " + degree.url + " ")
 
-# Faux Electrical Engineering course retrieval test
-eleg = Subject("ELEG")
-eleg.populate()
-print(str(len(eleg.courses)) + " courses in " + eleg.name + " (" + eleg.prefix + ")")
+# Test populate subjects index
+subjectindex = SubjectIndex()
+subjectindex.populate()
 
-os.system("pause")
+# Test list all subjects
+for subject in subjectindex.subjects:
+	subject.populate()
+	if subject.empty:
+		print("Error loading courses for (" + subject.prefix + ") " + subject.name)
+
+# Ask user for subject or course to identify
+print("Find a subject or course")
+while(True):
+	query = input("? ")
+	if "?" in query.split(" ", 1)[0]:
+		for subject in subjectindex.subjects:
+			print(subject.name + " (" + subject.prefix + "): " + str(len(subject.courses)) + " courses")
+	else:
+		if "?" in query.split(" ", 1)[1]:
+			result = subjectindex.find(query.split(" ", 1)[0])
+			for course in result.courses:
+				print(course.prefix + " " + str(course.number) + ": " + course.name)
+		else:
+			result = subjectindex.find(query.split(" ", 1)[0])
+			try:
+				if "Subject" in str(type(result)):
+					print(result.name + " (" + result.prefix + "): " + str(len(result.courses)) + " courses")
+				else:
+					print(result.prefix + " " + str(result.number) + ": " + result.name)
+			except:
+				print("Didn't quite understand that...")

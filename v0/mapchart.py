@@ -25,14 +25,14 @@ from io import BytesIO
 import os
 import numpy as np
 import cv2
-import jpype
-import asposediagram
-jpype.startJVM()
-from asposediagram.api import *
+#import jpype
+#import asposediagram
+#jpype.startJVM()
+#from asposediagram.api import *
 
 CATALOG_URL = 'https://www.atu.edu/catalog/archive/descriptions/courses.php?catalog=U'
 DEGREEMAP_YEARS_URL = 'https://www.atu.edu/advising/degreemaps.php'
-DEGREEMAP_URL = 'https://www.atu.edu/advising/degreemaps/2021-22/JournalismPrint.pdf'
+DEGREEMAP_URL = 'https://www.atu.edu/advising/degreemaps/2021-22/ElectricalEngineering.pdf'
 POPPLER_PATH = os.getcwd() + r"\poppler-22.04.0\Library\bin"
 TABULA_DIV = 2.77650881
 FIND_UP = False

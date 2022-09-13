@@ -154,10 +154,6 @@ delem = []
 
 #END JANK
 
-
-
-
-
 class CatalogHTMLParse(hp):
 	#This class is provided as a base for the other catalog classes since their data pages are structured almost identically. Inheritors MUST define a self.parse(self, data) method, called each time this class finds a result, and must also call CatalogHTMLParse.__init__(self, tablemode) in its own __init__ method, where tablemode is a boolean to slightly modify operation mode (for degree list pages, this should be True)
 	def __init__(self, tablemode):
@@ -388,37 +384,10 @@ subjectindex.populate()
 # Test list all subjects
 for subject in subjectindex.subjects:
 	subject.populate()
-	if subject.empty:
-		print("Error loading courses for (" + subject.prefix + ") " + subject.name)
-
-# Ask user for subject or course to identify
-"""
-print("Find a subject or course")
-while(True):
-	query = input("? ")
-	if "?" in query.split(" ", 1)[0]:
-		for subject in subjectindex.subjects:
-			print(subject.name + " (" + subject.prefix + "): " + str(len(subject.courses)) + " courses")
-	else:
-		if "?" in query.split(" ", 1)[1]:
-			result = subjectindex.find(query.split(" ", 1)[0])
-			for course in result.courses:
-				print(course.prefix + " " + str(course.number) + ": " + course.name)
-		else:
-			result = subjectindex.find(query.split(" ", 1)[0])
-			try:
-				if "Subject" in str(type(result)):
-					print(result.name + " (" + result.prefix + "): " + str(len(result.courses)) + " courses")
-				else:
-					print(result.prefix + " " + str(result.number) + ": " + result.name)
-			except:
-				print("Didn't quite understand that...")
-"""
-
 
 # jank
 for x in lists:
-    y = str(x)
+    y = str(x).strip()
     if y.startswith('Semester '):
         cursem = int(x[9])
         print('Semester ' + str(cursem))
@@ -429,7 +398,10 @@ for x in lists:
             subj = y.split()[0][-4:]
             crn = str(y.split()[1])[0:4]
             result = subjectindex.find(subj + ' ' + crn)
-            print(result.prefix + " " + str(result.number) + ": " + result.name)
+            if not result:
+                print(subj + ' ' + crn + ": unknown " + subjectindex.find(subj).name + " course")
+            else:
+                print(result.prefix + " " + str(result.number) + ": " + result.name)
             
             numsubj = numsubj + 1
         else:

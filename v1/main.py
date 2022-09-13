@@ -87,7 +87,7 @@ class CatalogYear(CatalogHTMLParse):
 		self.degrees.append(Degree(data, attr))
 
 class Degree():
-	# A degree. Todo: this is where PDF parsing happens
+	# A degree. To-do: this is where PDF parsing happens
 	def __init__(self, name, url):
 		self.name = name
 		self.url = SITE_PREFIX + url
@@ -98,7 +98,7 @@ class SubjectIndex(hp):
 		hp.__init__(self)
 		self.url = SITE_PREFIX + CATALOG_COURSES_URL
 		self.subjects = []
-		
+        
 		self.in_table = False
 		self.in_row = False
 		self.handle_prefix = False
@@ -164,6 +164,7 @@ class Subject(hp):
 		self.search_for_data = False
 		self.handle_name = False
 		self.handle_course = False
+		self.handle_desc = False
 		self.empty = False
 		
 	def find(self, query):
@@ -187,11 +188,13 @@ class Subject(hp):
 		self.search_for_data = (tag == "div" and attrs[0][1] == "col-lg-8 mb-5") or self.search_for_data
 		self.handle_name = tag == "h1" or self.handle_name
 		self.handle_course = tag == "h2" or self.handle_course
+		self.handle_desc = tag == "p" or self.handle_desc
 			
 	def handle_endtag(self, tag):
 		self.search_for_data = (not tag == "div") and self.search_for_data
 		self.handle_name = (not tag == "h1") and self.handle_name
 		self.handle_course = (not tag == "h2") and self.handle_course
+		self.handle_desc = self.handle_desc and not tag == "p"
 	
 	def handle_data(self, data):
 		if self.search_for_data:
@@ -202,6 +205,8 @@ class Subject(hp):
 				course.set_number(data.split(":", 1)[0].split(" ", 1)[1])
 				course.set_name(data.split(":", 1)[1])
 				self.courses.append(course)
+			if self.handle_desc:
+				self.courses[len(self.courses) - 1].append_desc(data)
 
 class Course():
 	# A course. Variables are set as they're come across in the course description pages. Some won't be used e.g. prereqs
@@ -220,11 +225,13 @@ class Course():
 			self.number = int(number)
 		except:
 			try:
-				self.number = int(number[0] * 1000)
+				self.number = int(number[0]) * 1000
 			except:
 				self.number = -1
-	def set_desc(self, desc):
-		self.desc = descname.strip()
+	def append_desc(self, desc):
+		if len(self.desc) > 0:
+			self.desc += "\n"
+		self.desc += desc.strip()
 	def add_prereq(self, course):
 		self.prereqs.append(course)
 	
@@ -254,21 +261,26 @@ for subject in subjectindex.subjects:
 # Ask user for subject or course to identify
 print("Find a subject or course")
 while(True):
-	query = input("? ")
+	query = input("? ").strip()
 	if "?" in query.split(" ", 1)[0]:
 		for subject in subjectindex.subjects:
 			print(subject.name + " (" + subject.prefix + "): " + str(len(subject.courses)) + " courses")
 	else:
-		if "?" in query.split(" ", 1)[1]:
+		try:
+			secondq = ("?" in query.split(" ", 1)[1])
+		except:
+			secondq = False
+		if secondq:
 			result = subjectindex.find(query.split(" ", 1)[0])
 			for course in result.courses:
 				print(course.prefix + " " + str(course.number) + ": " + course.name)
 		else:
-			result = subjectindex.find(query.split(" ", 1)[0])
+			result = subjectindex.find(query)
 			try:
 				if "Subject" in str(type(result)):
 					print(result.name + " (" + result.prefix + "): " + str(len(result.courses)) + " courses")
 				else:
 					print(result.prefix + " " + str(result.number) + ": " + result.name)
+					print(result.desc)
 			except:
 				print("Didn't quite understand that...")

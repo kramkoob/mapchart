@@ -235,24 +235,15 @@ class Course():
 	def add_prereq(self, course):
 		self.prereqs.append(course)
 	
-# Test get list of catalog years
+# Populate list of catalog years
 catalog = Catalog()
 catalog.populate()
 
-# Test populating the most recent year
-#for catalogyear in catalog.catalogyears:
-#        catalogyear.populate()
-#        print(str(len(catalogyear.degrees)) + " degrees for " + catalogyear.year_formatted_long)
-
-# Test list all degree plans for most recent year
-#for ind, degree in enumerate(catalog.catalogyears[0].degrees, start=1):
-#	print(str(ind) + ") " + degree.name + " - " + degree.url + " ")
-
-# Test populate subjects index
+# Populate subjects index
 subjectindex = SubjectIndex()
 subjectindex.populate()
 
-# Test list all subjects
+# Populate all subjects
 for subject in subjectindex.subjects:
 	subject.populate()
 	if subject.empty:
@@ -260,8 +251,13 @@ for subject in subjectindex.subjects:
 
 # Ask user for subject or course to identify
 print("Find a subject or course")
+print("Enter abbreviation (ELEG) to identify a subject")
+print("Enter ? to list all subjects")
+print("Enter \"abbreviation ?\" to list all courses in a subject")
+print("Enter \"abbreviation number\" to print details of a course")
+
 while(True):
-	query = input("? ").strip()
+	query = input("> ").strip()
 	if "?" in query.split(" ", 1)[0]:
 		for subject in subjectindex.subjects:
 			print(subject.name + " (" + subject.prefix + "): " + str(len(subject.courses)) + " courses")

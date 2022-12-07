@@ -13,6 +13,7 @@
 # * os.getcwd - get working directory to find Poppler on Windows for pdf2image
 # * numpy - number/image manipulation, used with OpenCV
 # * cv2 - OpenCV, to identify PDF elements (corners)
+#       install as opencv-python
 # * aspose-diagram - Visio library, uses Java
 
 # The PC version of Tabula is included to easily figure out where lines and whatnot *should* be

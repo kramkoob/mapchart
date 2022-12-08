@@ -1,4 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-tabula-pc/ linguist-vendored
+/tabula-pc/**/* linguist-vendored

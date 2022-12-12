@@ -1,0 +1,8 @@
+Changelog
+
+12/11/2022
+Split subject classes and catalog classes off into separate files.
+main.py is now tiny! And each set of test things will be commented in and out
+
+12/09/2022
+Add functional support for graduate classes, not yet for masters degree catalogs

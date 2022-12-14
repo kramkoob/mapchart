@@ -11,8 +11,10 @@
 import requests
 from html.parser import HTMLParser as hp
 
-SITE_PREFIX = r"https://www.atu.edu"
-CATALOG_YEARS_URL = r"/advising/degreemaps.php"
+import common
+
+SITE_PREFIX = r"https://www.atu.edu/"
+CATALOG_YEARS_URL = r"advising/degreemaps.php"
 
 class CatalogHTMLParse(hp):
 	#Base for the other catalog classes since their pages are structured almost identically. Inheritors MUST define a self.parse(self, data) method, called each time this class finds a result, and must also call CatalogHTMLParse.__init__(self, tablemode) in its own __init__ method, where tablemode is a boolean to slightly modify operation mode (for degree list pages, this should be True)

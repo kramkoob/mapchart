@@ -10,20 +10,35 @@
 import requests
 from html.parser import HTMLParser as hp
 
-SITE_PREFIX = r"https://www.atu.edu"
-CATALOG_COURSES_UNDERGRAD_URL = r"/catalog/current/undergraduate/courses/"
-CATALOG_COURSES_GRAD_URL = r"/catalog/current/graduate/courses/"
-CATALOG_COURSES_URL_END = r".php"
+import common
+
+DATA_PREFIX = "data\\"
+DATA_EXT = ".dat"
+SITE_PREFIX = r"https://www.atu.edu/catalog/current/"
+SITE_CATALOG2 =r"/courses/"
+SITE_COURSE_EXT = r".php"
+
+def courselevel(number):
+	check = int((number - number % 1000) / 1000)
+	levels = {
+		1: "Freshman",
+		2: "Sophomore",
+		3: "Junior",
+		4: "Senior",
+		5: "Graduate 1st year",
+		6: "Graduate 2nd year"
+	}
+	
+	return levels.get(check, "Unknown")
 
 class SubjectIndex(hp):
 	# Contains all subjects. grad = true for grad level courses
 	def __init__(self, grad=False):
 		hp.__init__(self)
 		self.grad = grad
-		if not grad:
-			self.url = SITE_PREFIX + CATALOG_COURSES_UNDERGRAD_URL
-		else:
-			self.url = SITE_PREFIX + CATALOG_COURSES_GRAD_URL
+		self.name = "graduate" if grad else "undergraduate"
+		self.url = SITE_PREFIX + self.name + SITE_CATALOG2
+		self.filename = DATA_PREFIX + self.name + DATA_EXT
 		self.subjects = []
 		
 		self.in_table = False
@@ -48,8 +63,27 @@ class SubjectIndex(hp):
 				if subject.prefix == query:
 					return subject
 	
-	def populate(self):
+	def fetch(self):
+		# load all data
 		self.feed(requests.get(self.url).text)
+		for subject in self.subjects:
+			subject.populate()
+		common.cache_save(self, self.filename)
+	
+	def populate(self):
+		# check if file exists, if it does, load file, otherwise load remote
+		
+		try:
+			self.subjects = common.cache_load(self.filename).subjects
+			self.subjects[0].name # if this throws then data is invalid
+			return True
+		except IndexError as e: print(self.filename + " invalid")
+		except FileNotFoundError as e: print(self.filename + " does not exist")
+		self.subjects = []
+		self.fetch()
+		print(str(len(self.subjects)) + " subjects for " + self.name)
+		return False
+				
 		# 1) Search for matching div that begins this content
 		# 2) Find next table row
 		# 3) First data cell has abbreviation
@@ -85,11 +119,9 @@ class Subject(hp):
 		hp.__init__(self)
 		self.prefix = prefix.upper()
 		self.grad = grad
+		self.grad_url = "graduate" if grad else "undergraduate"
 		self.name = ""
-		if not grad:
-			self.url = SITE_PREFIX + CATALOG_COURSES_UNDERGRAD_URL + prefix + CATALOG_COURSES_URL_END
-		else:
-			self.url = SITE_PREFIX + CATALOG_COURSES_GRAD_URL + prefix + CATALOG_COURSES_URL_END
+		self.url = SITE_PREFIX + self.grad_url + SITE_CATALOG2 + self.prefix + SITE_COURSE_EXT
 		self.courses = []
 		
 		self.search_for_data = False
@@ -134,7 +166,7 @@ class Subject(hp):
 			if self.handle_course:
 				course = Course(self.prefix)
 				course.set_number(data.split(":", 1)[0].split(" ", 1)[1])
-				course.set_name(data.split(":", 1)[1])
+				course.name = data.split(":", 1)[1].strip()
 				self.courses.append(course)
 			if self.handle_desc:
 				self.courses[len(self.courses) - 1].append_desc(data)
@@ -148,9 +180,9 @@ class Course():
 		self.name = ""
 		self.number = 0
 		self.desc = ""
+		self.level = ""
+		self.hours = 0
 			
-	def set_name(self, name):
-		self.name = name.strip()
 	def set_number(self, number):
 		try:
 			self.number = int(number)
@@ -159,11 +191,18 @@ class Course():
 				self.number = int(number[0]) * 1000
 			except:
 				self.number = -1
+		self.level = courselevel(self.number)
+		self.hours = self.number % 10
 	def append_desc(self, desc):
 		if len(self.desc) > 0:
 			self.desc += "\n"
-		self.desc += desc.strip()
+		try:
+			prereqs = desc.split("Prerequisites:", 1)[1]
+			for prereq in prereqs.split(" and ", 1):
+				self.add_prereq(prereq)
+		except:
+			self.desc += desc.strip().replace("\t", "").replace("  ", " ").replace("\n", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ")
 	def add_prereq(self, course):
-		self.prereqs.append(course)
+		self.prereqs.append(course.upper().strip())
 	
 

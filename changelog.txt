@@ -1,5 +1,17 @@
 Changelog
 
+12/13/2022
+Pickle/file saving has been implemented on the subjects
+New file for functions shared between all three scripts (just subjects and catalog for now): common.py
+Add separate hour and level integer and string to courses
+Courses very lazily try to split out prerequisites from their given description info*
+Subject.populate now checks local cache first before going online
+Subject.fetch is new, forces an online refresh and cache overwrite
+Moved main.py integral code into main() function and call
+main.py course test program made to display the additional information about courses as determined (level, hour, prereqs individually etc)
+
+*only tested on ELEG 3103
+
 12/11/2022
 Split subject classes and catalog classes off into separate files.
 main.py is now tiny! And each set of test things will be commented in and out

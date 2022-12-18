@@ -13,6 +13,8 @@ from html.parser import HTMLParser as hp
 
 import common
 
+DATA_PREFIX = "data\\"
+DATA_EXT = ".dat"
 SITE_PREFIX = r"https://www.atu.edu/"
 CATALOG_YEARS_URL = r"advising/degreemaps.php"
 

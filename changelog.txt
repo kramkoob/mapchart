@@ -1,5 +1,9 @@
 Changelog
 
+12/20/2022
+Moved old main into a new "old" folder, for old scripts - forgot to put this last time
+Fixed issue #1 and implemented absolute paths... seems to be doing fine for now
+
 12/13/2022
 Pickle/file saving has been implemented on the subjects
 New file for functions shared between all three scripts (just subjects and catalog for now): common.py

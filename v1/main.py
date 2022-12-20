@@ -16,8 +16,8 @@ def main():
 	indexg.populate()
 	
 	# Populate degree index
-	catalog = catalog.Catalog()
-	catalog.populate()
+	catalogindex = catalog.Catalog()
+	catalogindex.populate()
 
-if __name__=="__main__":
+if __name__ == "__main__":
 	main()

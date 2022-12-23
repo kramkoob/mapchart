@@ -64,7 +64,7 @@ class SubjectIndex(hp):
 					return subject
 	
 	def fetch(self):
-		# load all data
+		# force download fresh data
 		self.feed(requests.get(self.url).text)
 		for subject in self.subjects:
 			subject.populate()
@@ -72,16 +72,15 @@ class SubjectIndex(hp):
 	
 	def populate(self):
 		# check if file exists, if it does, load file, otherwise load remote
-		
 		try:
 			self.subjects = common.cache_load(self.filename).subjects
 			self.subjects[0].name # if this throws then data is invalid
 			return True
-		except IndexError as e: print(self.filename + " invalid")
-		except FileNotFoundError as e: print(self.filename + " does not exist")
+		except IndexError as e: print("'%s' invalid" % self.filename)
+		except FileNotFoundError as e: print("'%s' does not exist" % self.filename)
 		self.subjects = []
 		self.fetch()
-		print(str(len(self.subjects)) + " subjects for " + self.name)
+		print("%u subjects for '%s'" % (len(self.subjects), self.name))
 		return False
 				
 		# 1) Search for matching div that begins this content

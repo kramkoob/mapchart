@@ -1,5 +1,23 @@
 Changelog
 
+12/23/2022
+Current proposed file structure:
+root/
+	.py files
+	data/
+		graduate.dat
+		undergraduate.dat
+	maps/
+		[year]/
+			Bachelor of Science in Electrical Engineering.pdf
+			Bachelor of Science in Computer Engineering.pdf
+			etc.
+		[year]/
+			etc.
+
+where [year] is a shortened representation of the first year (ex.: 2022-2023 would be 22)
+to-do: automatic discovery of these files and recreating catalog classes. Directly pickling seems like it could be too much work for a class of this magnitude (that and the way the classes are laid out is not particularly conducive to this...)
+
 12/20/2022
 Moved old main into a new "old" folder, for old scripts - forgot to put this last time
 Fixed issue #1 and implemented absolute paths... seems to be doing fine for now

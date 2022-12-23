@@ -13,7 +13,7 @@ from html.parser import HTMLParser as hp
 
 import common
 
-DATA_PREFIX = "data\\"
+DATA_PREFIX = "maps\\"
 DATA_EXT = ".dat"
 SITE_PREFIX = r"https://www.atu.edu/"
 CATALOG_YEARS_URL = r"advising/degreemaps.php"
@@ -65,18 +65,19 @@ class CatalogHTMLParse(hp):
 			self.parse(data, self.next_attr)
 
 class Catalog(CatalogHTMLParse):
-	# Contains each catalog per academic year
+	# Contains every academic year catalog
 	def __init__(self):
 		CatalogHTMLParse.__init__(self, False)
 		self.catalogyears = []
 		self.url = SITE_PREFIX + CATALOG_YEARS_URL
+		self.filename = DATA_PREFIX + "catalog" + DATA_EXT
 	
 	def parse(self, data, attr):
 		# Called from CatalogHTMLParse
 		self.catalogyears.append(CatalogYear(data, attr))
 	
 class CatalogYear(CatalogHTMLParse):
-	# Contains the degrees offered in a specific academic year
+	# Contains the degrees offered from a catalog in a specific academic year
 	def __init__(self, year, url):
 		CatalogHTMLParse.__init__(self, True)
 		self.degrees = []
@@ -86,6 +87,7 @@ class CatalogYear(CatalogHTMLParse):
 		self.year_formatted_long = year # "2021-2022"
 		# link is passed from html parser, but needs the domain in front of it since it's a local address
 		self.url = SITE_PREFIX + url
+		self.filename = DATA_PREFIX + "catalog" + str(self.year) + DATA_EXT
 		
 	def parse(self, data, attr):
 		# Called from CatalogHTMLParse

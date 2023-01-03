@@ -4,6 +4,7 @@
 # pickle: built-in Python module for serializing classes, objects etc., for storage
 # requests: get documents from web
 # html.parser: go through and find html elements and stuff. rip data from html
+# pyflowchart: processing/creating flowchart.js code
 
 import subjects
 import catalog

@@ -1,5 +1,11 @@
 Changelog
 
+1/3/2023
+Visio implementation not possible.
+	vsdx: lack of documentation.
+	Aspose: good god it's expensive (and trial testing failed)
+Going to try flowchart.js, which requires the pyflowchart library.
+
 12/23/2022
 Current proposed file structure:
 root/

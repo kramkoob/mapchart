@@ -1,5 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-# this damn thing has caused so much trouble.. how hard is it to exclude a folder and all its contents?
+# how hard could it be?
 tabula-pc/**/* linguist-vendored
+tabula_edit/**/* linguist-vendored
+poppler-22.04.0/**/* linguist-vendored

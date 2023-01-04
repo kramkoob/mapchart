@@ -1,12 +1,4 @@
-#notepad++ enjoys making local backups.
-#no problem, but keep the repo uncluttered
 *.bak
 
-#tabula and includes modifiy a bunch of files when it's used, so don't
 **/__pycache__
 *.pyc
-
-#ignore v0 and v0+v1 and tabula-pc
-v0
-v0+v1
-tabula-pc

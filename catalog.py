@@ -10,10 +10,11 @@
 
 import requests
 from html.parser import HTMLParser as hp
+import os
 
 import common
 
-DATA_PREFIX = "maps\\"
+FILE_CATALOG_PREFIX = "data\\catalog"
 DATA_EXT = ".dat"
 SITE_PREFIX = r"https://www.atu.edu/"
 CATALOG_YEARS_URL = r"advising/degreemaps.php"
@@ -31,7 +32,16 @@ class CatalogHTMLParse(hp):
 
 	def populate(self):
 		# Initiate the page loading and parsing into useable data
-		self.feed(requests.get(self.url).text)
+		try:
+			loadfile = common.cache_load(self.filename)
+			if self.tablemode == True:
+				self.degrees = loadfile.degrees
+				self.figure_year(loadfile.year_formatted_long)
+			else:
+				self.catalogyears = common.cache_load(self.filename).catalogyears
+		except:
+			self.feed(requests.get(self.url).text)
+			common.cache_save_auto(self)
 	
 	# 1) First searches for paragraph with matching text, or for opening table
 	# 2) Then searches the following lists and 3) their elements
@@ -70,7 +80,8 @@ class Catalog(CatalogHTMLParse):
 		CatalogHTMLParse.__init__(self, False)
 		self.catalogyears = []
 		self.url = SITE_PREFIX + CATALOG_YEARS_URL
-		self.filename = DATA_PREFIX + "catalog" + DATA_EXT
+		self.filename = FILE_CATALOG_PREFIX + DATA_EXT
+		print(self.filename)
 	
 	def parse(self, data, attr):
 		# Called from CatalogHTMLParse
@@ -81,20 +92,48 @@ class CatalogYear(CatalogHTMLParse):
 	def __init__(self, year, url):
 		CatalogHTMLParse.__init__(self, True)
 		self.degrees = []
+		self.figure_year(year)
+
+		# link is passed from html parser, but needs the domain in front of it since it's a local address
+		self.url = SITE_PREFIX + url
+		self.file_prefix = FILE_CATALOG_PREFIX + str(self.year)
+		self.filename = self.file_prefix + DATA_EXT
+		print(self.filename)
 		
+	def figure_year(self, year):
 		self.year = int(year[2:4]) #takes e.g. "2021-2022" and strips to an integer 21
 		self.year_formatted = str(self.year) + "-" + str(self.year + 1) # "21-22"
 		self.year_formatted_long = year # "2021-2022"
-		# link is passed from html parser, but needs the domain in front of it since it's a local address
-		self.url = SITE_PREFIX + url
-		self.filename = DATA_PREFIX + "catalog" + str(self.year) + DATA_EXT
-		
+	
 	def parse(self, data, attr):
 		# Called from CatalogHTMLParse
-		self.degrees.append(Degree(data, attr))
+		self.degrees.append(Degree(data, attr, self.file_prefix))
 
 class Degree():
 	# A degree. To-do: this is where PDF parsing happens
-	def __init__(self, name, url):
+	def __init__(self, name, url, file_prefix):
 		self.name = name
+		self.file = os.path.basename(url).split('/')[-1]
 		self.url = SITE_PREFIX + url
+		self.filename = os.path.join(file_prefix, self.file)
+	
+	# feel like this should be named "get" but populate fits the existing naming scheme
+	def populate(self):
+		try:
+			self.file = common.cache_load(self.filename)
+		except FileNotFoundError:
+			self.file = requests.get(self.url).content
+			common.cache_save(self.file, self.filename)
+			
+if __name__ == "__main__":
+	print("catalog.py internal test")
+	test_catalog = Catalog()
+	test_catalog.populate()
+	test_catalogyear = test_catalog.catalogyears[0]
+	test_catalogyear.populate()
+	test_degrees = test_catalogyear.degrees
+	for degree in test_degrees:
+		print(degree.name)
+		print(degree.url)
+		print(degree.filename)
+		degree.populate()

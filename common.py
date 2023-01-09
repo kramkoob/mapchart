@@ -15,22 +15,32 @@ def cache_library(path):
 	for name in split:
 		check = join(check, name)
 		if not exists(check):
-			print("creating '%s'" % check)
+			#print("creating '%s'" % check)
 			mkdir(check)
+
+def cache_save_auto(obj):
+	filename = obj.filename
+	cache_save(obj, filename)
 
 def cache_save(obj, filename):
 	#print("save " + obj.__class__.__name__ + " as " + filename + "...", end=" ")
 	cache_library(filename[0:filename.rindex("\\")])
 	if exists(PATH_PARENT + filename): remove(PATH_PARENT + filename)
 	with open(PATH_PARENT + filename, "wb") as file:
-		dump(obj, file)
+		if(str(type(obj)) == "<class 'bytes'>"):
+			file.write(obj)
+		else:
+			dump(obj, file)
 	#print("done")
 
 def cache_load(filename):
 	#print("load " + filename)
 	if not exists(PATH_PARENT + filename): raise FileNotFoundError(PATH_PARENT + filename)
 	with open(PATH_PARENT + filename, "rb") as file:
-		return load(file)
+		try:
+			return load(file)
+		except:
+			return file.read()
 
 if __name__ == "__main__":
 	print("PATH_PARENT = " + PATH_PARENT)

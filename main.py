@@ -13,12 +13,8 @@ def main():
 	# Populate subjects index
 	indexug = subjects.SubjectIndex(False)
 	indexug.populate()
-	indexg = subjects.SubjectIndex(True)
-	indexg.populate()
 	
-	# Populate degree index
-	catalogindex = catalog.Catalog()
-	catalogindex.populate()
+	print(indexug.find("ELEG 4122").desc)
 
 if __name__ == "__main__":
 	main()

@@ -76,12 +76,11 @@ class SubjectIndex(hp):
 			self.subjects = common.cache_load(self.filename).subjects
 			self.subjects[0].name # if this throws then data is invalid
 			return True
-		except IndexError as e: print("'%s' invalid" % self.filename)
-		except FileNotFoundError as e: print("'%s' does not exist" % self.filename)
-		self.subjects = []
-		self.fetch()
-		print("%u subjects for '%s'" % (len(self.subjects), self.name))
-		return False
+		except:
+			self.subjects = []
+			self.fetch()
+			print("%u subjects for '%s'" % (len(self.subjects), self.name))
+			return False
 				
 		# 1) Search for matching div that begins this content
 		# 2) Find next table row
@@ -196,12 +195,14 @@ class Course():
 		if len(self.desc) > 0:
 			self.desc += "\n"
 		try:
-			prereqs = desc.split("Prerequisites:", 1)[1]
+			prereqs = desc.split("Prerequisite", 1)[1]
 			for prereq in prereqs.split(" and ", 1):
 				self.add_prereq(prereq)
-		except:
-			self.desc += desc.strip().replace("\t", "").replace("  ", " ").replace("\n", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ")
+		finally:
+			splitted = ""
+			for split in desc.split("\n"):
+				splitted += split if {"Offered:","Prerequisite","\$"} not in split else ""
+			for x in splitted:
+				self.desc += x if x.isalnum() or x == " " else ""
 	def add_prereq(self, course):
 		self.prereqs.append(course.upper().strip())
-	
-

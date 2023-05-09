@@ -11,10 +11,11 @@
 import requests
 from html.parser import HTMLParser as hp
 import os
+from os.path import join
 
 import common
 
-FILE_CATALOG_PREFIX = "data\\catalog"
+FILE_CATALOG_PREFIX = join("data", "catalog")
 DATA_EXT = ".dat"
 SITE_PREFIX = r"https://www.atu.edu/"
 CATALOG_YEARS_URL = r"advising/degreemaps.php"
@@ -31,7 +32,7 @@ class CatalogHTMLParse(hp):
 		self.next_attr = ""
 
 	def populate(self):
-		# Initiate the page loading and parsing into useable data
+		# Initiate the page loading and parsing into usable data
 		try:
 			loadfile = common.cache_load(self.filename)
 			if self.tablemode == True:
@@ -41,7 +42,10 @@ class CatalogHTMLParse(hp):
 				self.catalogyears = common.cache_load(self.filename).catalogyears
 		except:
 			self.feed(requests.get(self.url).text)
-			common.cache_save_auto(self)
+			try:
+				common.cache_save_auto(self)
+			except Exception:
+				print("Unable to save catalog/catalog year")
 	
 	# 1) First searches for paragraph with matching text, or for opening table
 	# 2) Then searches the following lists and 3) their elements
@@ -124,6 +128,8 @@ class Degree():
 		except FileNotFoundError:
 			self.file = requests.get(self.url).content
 			common.cache_save(self.file, self.filename)
+		except Exception:
+			print("Unable to save degree file")
 			
 if __name__ == "__main__":
 	print("catalog.py internal test")

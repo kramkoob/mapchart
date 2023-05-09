@@ -14,7 +14,19 @@ def main():
 	indexug = subjects.SubjectIndex(False)
 	indexug.populate()
 	
-	print(indexug.find("ELEG 4122").desc)
+	try:
+		course = indexug.find("ELEG 3103")
+		print(course.name)
+		print(course.desc)
+		print("Prerequisites:")
+		for prereq in course.prereqs:
+			try:
+				prereq_course = indexug.find(prereq)
+				print(prereq + ": " + prereq_course.name)
+			except:
+				print(prereq)
+	except:
+		print("Couldn't find that course...")
 
 if __name__ == "__main__":
 	main()

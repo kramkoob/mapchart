@@ -9,7 +9,6 @@
 
 import requests
 from html.parser import HTMLParser as hp
-
 import common
 
 DATA_PREFIX = "data\\"
@@ -68,7 +67,10 @@ class SubjectIndex(hp):
 		self.feed(requests.get(self.url).text)
 		for subject in self.subjects:
 			subject.populate()
-		common.cache_save(self, self.filename)
+		try:
+			common.cache_save(self, self.filename)
+		except:
+			print("Unable to save cache")
 	
 	def populate(self):
 		# check if file exists, if it does, load file, otherwise load remote
@@ -170,7 +172,7 @@ class Subject(hp):
 				self.courses[len(self.courses) - 1].append_desc(data)
 
 class Course():
-	# A course. Variables are set as they're come across in the course description pages. Some won't be used e.g. prereqs
+	# A course. Variables are set as they're come across in the course description pages.
 	def __init__(self, prefix):
 		self.prefix = prefix
 
@@ -182,27 +184,57 @@ class Course():
 		self.hours = 0
 			
 	def set_number(self, number):
+		'''Set course number, level description and hours'''
 		try:
 			self.number = int(number)
 		except:
 			try:
+				#Fix for the occasional "x000-level elective" sorta deal
 				self.number = int(number[0]) * 1000
 			except:
 				self.number = -1
 		self.level = courselevel(self.number)
 		self.hours = self.number % 10
+	
 	def append_desc(self, desc):
-		if len(self.desc) > 0:
-			self.desc += "\n"
+		'''Called from the HTML handler handle_data, sets up description and prerequisites'''
 		try:
-			prereqs = desc.split("Prerequisite", 1)[1]
+			#Split like this to handle plural or singular "prerequisite"
+			prereqs = desc.split("Prerequisite", 1)[1].split(": ", 1)[1]
 			for prereq in prereqs.split(" and ", 1):
 				self.add_prereq(prereq)
-		finally:
+		except:
+			#If given text/paragraph is not a prerequisite, add this description
 			splitted = ""
 			for split in desc.split("\n"):
-				splitted += split if {"Offered:","Prerequisite","\$"} not in split else ""
+				split_add = True
+				#Filter out keywords
+				try:
+					split.split("Offered", 1)[1]
+					split_add = False
+				except: pass
+				try:
+					split.split("Prerequisite", 1)[1]
+					split_add = False
+				except: pass
+				try:
+					split.split("$", 1)[1]
+					split_add = False
+				except: pass
+				#If keyword wasn't found and it has length, add
+				if(split_add and len(split) > 0):
+					to_split = " ".join(split.split())
+					if(len(split) > 1):
+						splitted += to_split
+			#Go through and destroy double space instances
+			splitted = " ".join(splitted.split())
 			for x in splitted:
-				self.desc += x if x.isalnum() or x == " " else ""
+				#Make sure each character we're adding is real
+				self.desc += (x if x.isalnum() or x == " " else "")
+	
 	def add_prereq(self, course):
+		'''Append prerequisite. future: detect if it's an actual course and differentiate'''
 		self.prereqs.append(course.upper().strip())
+
+if __name__ == "__main__":
+	raise Exception("This isn't the script you're looking for!")

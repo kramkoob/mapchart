@@ -1,21 +1,17 @@
 # Contains functions common to the other scripts.
-
-# cache_save: deletes old cache file and overwrites it with a pickled object
-# cache_load: checks for the file, and if it's there, load it and unpickle it
+# Enable FORCE_DISABLE_CACHE to disable all file access
 
 from os.path import exists, realpath, dirname, join
 from os import remove, mkdir
 from pickle import dump, load
 
-PATH_PARENT = realpath(dirname(__file__)) + "\\"
-FORCE_DISABLE_CACHE = True
-
-def cache_throw_disabled():
-	if FORCE_DISABLE_CACHE:
-		raise Exception("FORCE_DISABLE_CACHE is set, no file action permitted")
+PATH_PARENT = join(realpath(dirname(__file__)), "")
+FORCE_DISABLE_CACHE = False
 
 def cache_library(path):
-	cache_throw_disabled()
+	'''Automatically tree to desired path if folders do not exist'''
+	if FORCE_DISABLE_CACHE:
+		raise Exception("FORCE_DISABLE_CACHE is set, no folders created")
 	split = path.split("\\")
 	check = PATH_PARENT
 	for name in split:
@@ -25,11 +21,14 @@ def cache_library(path):
 			mkdir(check)
 
 def cache_save_auto(obj):
+	'''Save/overwrite object file using object's name'''
 	filename = obj.filename
 	cache_save(obj, filename)
 
 def cache_save(obj, filename):
-	cache_throw_disabled()
+	'''Save/overwrite object file given a filename'''
+	if FORCE_DISABLE_CACHE:
+		raise Exception("FORCE_DISABLE_CACHE is set, no files saved")
 	#print("save " + obj.__class__.__name__ + " as " + filename + "...", end=" ")
 	cache_library(filename[0:filename.rindex("\\")])
 	if exists(PATH_PARENT + filename): remove(PATH_PARENT + filename)
@@ -41,7 +40,9 @@ def cache_save(obj, filename):
 	#print("done")
 
 def cache_load(filename):
-	cache_throw_disabled()
+	'''Load object from filename and return it as itself'''
+	if FORCE_DISABLE_CACHE:
+		raise Exception("FORCE_DISABLE_CACHE is set, no file access permitted")
 	#print("load " + filename)
 	if not exists(PATH_PARENT + filename): raise FileNotFoundError(PATH_PARENT + filename)
 	with open(PATH_PARENT + filename, "rb") as file:

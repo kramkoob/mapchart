@@ -1,23 +1,19 @@
-# subjects.py
+#!/usr/bin/python3
 
 # Contains all related to subjects and courses.
-
-#	Classes:
-#		SubjectIndex
-#		Subject
-#		Course
 
 import requests
 from html.parser import HTMLParser as hp
 import common
+from os.path import join
 
-DATA_PREFIX = "data\\"
-DATA_EXT = ".dat"
+DATA_PREFIX = join("data", "")
 SITE_PREFIX = r"https://www.atu.edu/catalog/current/"
 SITE_CATALOG2 =r"/courses/"
 SITE_COURSE_EXT = r".php"
 
 def courselevel(number):
+	'''Returns naming of a given course difficulty'''
 	check = int((number - number % 1000) / 1000)
 	levels = {
 		1: "Freshman",
@@ -31,13 +27,15 @@ def courselevel(number):
 	return levels.get(check, "Unknown")
 
 class SubjectIndex(hp):
-	# Contains all subjects. grad = true for grad level courses
+	'''Index class for all subjects. Separate for graduate and undergraduate'''
+	#Inherits from HTMLParser to sift through the website code
 	def __init__(self, grad=False):
+		'''Initialize. Pass "true" for graduate course index'''
 		hp.__init__(self)
 		self.grad = grad
 		self.name = "graduate" if grad else "undergraduate"
 		self.url = SITE_PREFIX + self.name + SITE_CATALOG2
-		self.filename = DATA_PREFIX + self.name + DATA_EXT
+		self.filename = join(DATA_PREFIX, self.name + ".dat")
 		self.subjects = []
 		
 		self.in_table = False
@@ -47,33 +45,41 @@ class SubjectIndex(hp):
 		self.get_data = False
 
 	def find(self, query):
+		'''Search for a subject or class within the index'''
+		#This stands to be optimized and made more reliable
 		query = query.upper()
 		if " " in query:
+			#Space indicates a class e.g. ELEG 4122
 			query_split = query.split(" ", 1)
 			prefix = query_split[0]
 			number = int(query_split[1])
 
 			for subject in self.subjects:
 				if subject.prefix == prefix:
+					#Perform a search in that subject class once matching
 					return subject.find(number)
 
 		else:
+			#No space indicates to simply return a subject e.g. ELEG
 			for subject in self.subjects:
 				if subject.prefix == query:
 					return subject
 	
 	def fetch(self):
-		# force download fresh data
+		'''Download and save fresh data from ATU servers'''
+		#The following line is a call to HTMLParser. See the handle_* functions.
 		self.feed(requests.get(self.url).text)
+		#Auto-populate all subjects downloaded.
 		for subject in self.subjects:
 			subject.populate()
+		#Attempt to save as a file unless it is not possible
 		try:
 			common.cache_save(self, self.filename)
 		except:
 			print("Unable to save cache")
 	
 	def populate(self):
-		# check if file exists, if it does, load file, otherwise load remote
+		'''Load cached/download fresh data'''
 		try:
 			self.subjects = common.cache_load(self.filename).subjects
 			self.subjects[0].name # if this throws then data is invalid
@@ -113,8 +119,8 @@ class SubjectIndex(hp):
 				self.subjects[len(self.subjects) - 1].name = data.strip()
 
 class Subject(hp):
-	# Contains courses in each subject, e.g. ELEG
-	# Subjects page is quite different from the catalog. And beyond that, different years have different layouts...
+	'''Subject e.g. ELEG (and all classes therein), part of a SubjectIndex'''
+	#Subject contains no means of saving as they're all part of a subject index
 	def __init__(self, prefix, grad):
 		hp.__init__(self)
 		self.prefix = prefix.upper()
@@ -131,12 +137,14 @@ class Subject(hp):
 		self.empty = False
 		
 	def find(self, query):
+		'''Search index for a specific course number'''
 		number = int(query)
 		for ind, course in enumerate(self.courses):
 			if course.number == number:
 				return course
-								
+
 	def populate(self):
+		'''Download data from the internet'''
 		self.feed(requests.get(self.url).text)
 		# 1) Search for matching div that begins this content
 		# 2) Find the large header containing the subject's actual name
@@ -172,7 +180,8 @@ class Subject(hp):
 				self.courses[len(self.courses) - 1].append_desc(data)
 
 class Course():
-	# A course. Variables are set as they're come across in the course description pages.
+	'''Course e.g. ELEG 4122, part of a Subject'''
+	#Note: Nearly all variables set externally
 	def __init__(self, prefix):
 		self.prefix = prefix
 
@@ -197,7 +206,8 @@ class Course():
 		self.hours = self.number % 10
 	
 	def append_desc(self, desc):
-		'''Called from the HTML handler handle_data, sets up description and prerequisites'''
+		'''Set up description and prerequisites'''
+		#Called from the HTML handler in Subject
 		try:
 			#Split like this to handle plural or singular "prerequisite"
 			prereqs = desc.split("Prerequisite", 1)[1].split(": ", 1)[1]
@@ -233,7 +243,7 @@ class Course():
 				self.desc += (x if x.isalnum() or x == " " else "")
 	
 	def add_prereq(self, course):
-		'''Append prerequisite. future: detect if it's an actual course and differentiate'''
+		'''Append prerequisite as a string'''
 		self.prereqs.append(course.upper().strip())
 
 if __name__ == "__main__":

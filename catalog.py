@@ -1,12 +1,5 @@
-# catalog.py
-
+#!/usr/bin/python3
 # Contains catalog and degree info. PDF parsing of degree maps.
-
-#	Classes:
-#		CatalogHTMLParse
-#		Catalog
-#		CatalogYear
-#		Degree
 
 import requests
 from html.parser import HTMLParser as hp
@@ -21,8 +14,14 @@ SITE_PREFIX = r"https://www.atu.edu/"
 CATALOG_YEARS_URL = r"advising/degreemaps.php"
 
 class CatalogHTMLParse(hp):
-	#Base for the other catalog classes since their pages are structured almost identically. Inheritors MUST define a self.parse(self, data) method, called each time this class finds a result, and must also call CatalogHTMLParse.__init__(self, tablemode) in its own __init__ method, where tablemode is a boolean to slightly modify operation mode (for degree list pages, this should be True)
+	'''Base class and handling functions for Catalog and CatalogYear'''
+	#their pages are structured almost identically.
+	#Inheritors MUST define a self.parse(self, data) method
+	#Inheritors must also call CatalogHTMLParse.__init__(self, tablemode) in __init__
+	#(tablemode is a boolean to slightly modify operation mode:
+	#for degree list pages, this should be True)
 	def __init__(self, tablemode):
+		'''init. tablemode: adjust parsing. for CatalogYear, this should be True'''
 		hp.__init__(self)
 		self.tablemode = tablemode
 		self.check_text = False
@@ -32,6 +31,7 @@ class CatalogHTMLParse(hp):
 		self.next_attr = ""
 
 	def populate(self):
+		'''Load cached/download fresh data'''
 		# Initiate the page loading and parsing into usable data
 		try:
 			loadfile = common.cache_load(self.filename)
@@ -79,7 +79,7 @@ class CatalogHTMLParse(hp):
 			self.parse(data, self.next_attr)
 
 class Catalog(CatalogHTMLParse):
-	# Contains every academic year catalog
+	'''Entire catalog, containing years, therein containing degree maps'''
 	def __init__(self):
 		CatalogHTMLParse.__init__(self, False)
 		self.catalogyears = []
@@ -88,12 +88,13 @@ class Catalog(CatalogHTMLParse):
 		print(self.filename)
 	
 	def parse(self, data, attr):
-		# Called from CatalogHTMLParse
+		'''Parse data from CatalogHTMLParse.handle_data'''
 		self.catalogyears.append(CatalogYear(data, attr))
 	
 class CatalogYear(CatalogHTMLParse):
-	# Contains the degrees offered from a catalog in a specific academic year
+	'''A specific year from the catalog, containing degrees offered that year'''
 	def __init__(self, year, url):
+		'''init. Must pass catalog year and url to the year page'''
 		CatalogHTMLParse.__init__(self, True)
 		self.degrees = []
 		self.figure_year(year)
@@ -101,28 +102,29 @@ class CatalogYear(CatalogHTMLParse):
 		# link is passed from html parser, but needs the domain in front of it since it's a local address
 		self.url = SITE_PREFIX + url
 		self.file_prefix = FILE_CATALOG_PREFIX + str(self.year)
-		self.filename = self.file_prefix + DATA_EXT
+		self.filename = self.file_prefix + ".dat"
 		print(self.filename)
 		
 	def figure_year(self, year):
+		'''Calculate year in a few different formats'''
 		self.year = int(year[2:4]) #takes e.g. "2021-2022" and strips to an integer 21
 		self.year_formatted = str(self.year) + "-" + str(self.year + 1) # "21-22"
 		self.year_formatted_long = year # "2021-2022"
 	
 	def parse(self, data, attr):
-		# Called from CatalogHTMLParse
+		'''Parse data from CatalogHTMLParse.handle_data'''
 		self.degrees.append(Degree(data, attr, self.file_prefix))
 
 class Degree():
-	# A degree. To-do: this is where PDF parsing happens
+	'''Degree (plan). PDF of degree stored and parsed in here'''
 	def __init__(self, name, url, file_prefix):
+		'''init. Must pass name of degree, url to pdf, and catalog year file prefix'''
 		self.name = name
-		self.file = os.path.basename(url).split('/')[-1]
 		self.url = SITE_PREFIX + url
-		self.filename = os.path.join(file_prefix, self.file)
+		self.filename = join(file_prefix, os.path.basename(url).split('/')[-1])
 	
-	# feel like this should be named "get" but populate fits the existing naming scheme
 	def populate(self):
+		'''Load cached/download and save degree PDF contents'''
 		try:
 			self.file = common.cache_load(self.filename)
 		except FileNotFoundError:

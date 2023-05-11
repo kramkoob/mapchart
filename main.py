@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # Mapchart by Thomas Dodds
 # Automatically download and display ATU degree programs as well-formatted flowcharts
 

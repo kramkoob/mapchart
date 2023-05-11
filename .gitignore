@@ -1,6 +1,6 @@
 *.bak
-
 **/__pycache__
 *.pyc
-
 *.pdf
+*.dat
+data/

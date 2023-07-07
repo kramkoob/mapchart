@@ -134,7 +134,7 @@ class Degree():
 			print("Unable to save degree file")
 			
 if __name__ == "__main__":
-	print("catalog.py internal test")
+	print("catalog.py test")
 	test_catalog = Catalog()
 	test_catalog.populate()
 	test_catalogyear = test_catalog.catalogyears[0]

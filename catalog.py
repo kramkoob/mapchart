@@ -1,0 +1,140 @@
+#!/usr/bin/python3
+
+#Catalog data access frontend
+
+import cache
+
+import requests
+import bs4 as bs
+from os.path import join
+
+_url_endpoint = 'https://www.atu.edu/catalog/archive/app/descriptions/catalog-data.php'
+_url_terms = 'https://www.atu.edu/catalog/archive/app/descriptions/index.php'
+
+#Classes
+class term:
+	def __init__(self, id, name='null'):
+		self.name = name
+		self.id = self._check(id)
+	def _check(self, id):
+		if not isinstance(id, str):
+			raise Exception('got ' + str(type(id)) + ', requires <class \'str\'>')
+		if int(id[:4]) < 2007:
+			raise Exception('invalid term year ' + id)
+		return id
+
+class course:
+	def __init__(self):
+		self.name = 'null'
+		self.id = '0000'
+		self.subject = subject()
+		self.desc = 'null'
+	def __init__(self, name, id, subject):
+		self.name = name
+		self.id = self._check(id)
+		self.subject = subject
+		self.desc = 'null'
+	def _check(self, id):
+		if not isinstance(id, str):
+			raise Exception('got ' + str(type(id)) + ', requires <class \'str\'>')
+		if len(id) > 4:
+			raise Exception('invalid course id ' + id)
+		return id
+	def get_desc(self, term):
+		try:
+			search = cache.load(join(term.id, self.subject.id, 'courses.dat'))
+			for i in search:
+				if i.id == self.id:
+					if i.desc == 'null':
+						raise Exception('null description stored in file')
+					self.desc = i.desc
+		except:
+			endpoint = bs.BeautifulSoup(_endpoint(term=term, subject=self.subject, number=self.id), 'lxml-xml')
+			self.desc = _cdata_text(endpoint.find('description').get_text())
+			search = cache.load(join(term.id, self.subject.id, 'courses.dat'))
+			for k,v in enumerate(search):
+				if v.id == self.id:
+					search[k] = self
+			cache.save(search, join(term.id, self.subject.id, 'courses.dat'))
+
+class subject:
+	def __init__(self, name='null', id='0000'):
+		self.name = name
+		self.id = self._check(id)
+	def _check(self, id):
+		if not isinstance(id, str):
+			raise Exception('got ' + str(type(id)) + ', requires <class \'str\'>')
+		if len(id) > 4:
+			raise Exception('invalid subject code' + id)
+		return id
+
+#Private methods
+def _endpoint(term='', subject='', number='', campus='B'):
+	request = _url_endpoint + '?campus=' + campus
+	if term != '':
+		if isinstance(term, str):
+			request = request + '&term=' + term
+		else:
+			request = request + '&term=' + term.id
+	if subject != '':
+		if isinstance(subject, str):
+			request = request + '&subject=' + subject
+		else:
+			request = request + '&subject=' + subject.id
+	if number != '':
+		request = request + '&number=' + number
+	return requests.get(request).text
+
+def _cdata_text(string):
+	return string.removeprefix('<![CDATA[').removesuffix(']]').strip()
+
+#Public methods
+def terms():
+	try:
+		terms = cache.load('terms.dat')
+	except FileNotFoundError:
+		terms = list()
+		termspage = requests.get(_url_terms)
+		termspage_bs = bs.BeautifulSoup(termspage.text, 'lxml')
+		termselect = termspage_bs.find(id='term')
+		termstags = termselect.find_all('option')
+		for i in termstags:
+			terms.append(term(i['value'], i.get_text()))
+		cache.save(terms, 'terms.dat')
+	finally:
+		return terms
+
+def subjects(term):
+	filename = join(term.id, 'subjects.dat')
+	try:
+		subjects = cache.load(filename)
+	except:
+		subjects = list()
+		endpoint = bs.BeautifulSoup(_endpoint(term=term), 'lxml-xml')
+		subjectsxml = endpoint.find_all('subject')
+		for i in subjectsxml:
+			name = _cdata_text(i.find('description').get_text())
+			id = i.find('code').get_text()
+			subjects.append(subject(name, id))
+		cache.save(subjects, filename)
+	finally:
+		return subjects
+
+def courses(term, subject):
+	filename = join(term.id, subject.id, 'courses.dat')
+	try:
+		courses = cache.load(filename)
+	except:
+		courses = list()
+		endpoint = bs.BeautifulSoup(_endpoint(term=term, subject=subject), 'lxml-xml')
+		coursesxml = endpoint.find_all('course')
+		for i in coursesxml:
+			name = _cdata_text(i.find('title').get_text())
+			id = i.find('number').get_text()
+			courses.append(course(name, id, subject))
+		cache.save(courses, filename)
+	finally:
+		return courses
+
+if __name__ == '__main__':
+	print('Salutations from catalog.py')

@@ -7,18 +7,6 @@
 #	lxml (python-lxml) - fast HTML/XML parser for bs4
 #	requests (python-requests)- HTTP requests
 
-#Online Resources:
-#	https://www.atu.edu/catalog/archive/app/descriptions/catalog-data.php
-#		term: 202220, 200740 etc.
-#		subject: ELEG, MATH, STAT, ENGL etc.
-#		number: 4133, 1013 etc.
-#		campus: B (All), M (Russellville), 1 (Ozark)
-#Script sources:
-#	https://www.atu.edu/catalog/archive/app/descriptions/index.php?catalog=U
-#	https://www.atu.edu/catalog/archive/undergraduate/2021/colleges/applied_sciences/elec_eng/elec_eng.php
-#	https://www.atu.edu/catalog/archive/_resources/catalog/js/catalog.js
-#	https://www.atu.edu/catalog/archive/_resources/js/common.js
-
 import catalog
 
 def test_id(database, name):

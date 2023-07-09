@@ -2,6 +2,12 @@
 
 #Catalog data access frontend
 
+#https://www.atu.edu/catalog/archive/app/descriptions/catalog-data.php
+#	term: 202220, 200740 etc.
+#	subject: ELEG, MATH, STAT, ENGL etc.
+#	number: 4133, 1013 etc.
+#	campus: B (All), M (Russellville), 1 (Ozark)
+
 import cache
 
 import requests
@@ -51,6 +57,11 @@ class course:
 		except:
 			endpoint = bs.BeautifulSoup(_endpoint(term=term, subject=self.subject, number=self.id), 'lxml-xml')
 			self.desc = _cdata_text(endpoint.find('description').get_text())
+			desc_bs = bs.BeautifulSoup(self.desc, 'lxml')
+			count = 0
+			for i in desc_bs.find_all('br'):
+				i.extract()
+			self.desc = desc_bs.get_text()
 			search = cache.load(join(term.id, self.subject.id, 'courses.dat'))
 			for k,v in enumerate(search):
 				if v.id == self.id:

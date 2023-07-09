@@ -1,0 +1,203 @@
+Through each link on the Programs of Study page, how many accordion elements (semester plans) does it have
+
+Agriculture Business has 0
+Animal Science Option has 1
+Horticulture Option has 1
+Pre-Veterinary Medicine has 1
+Agriculture for Teacher Licensure has 1
+Hospitality Administration has 0
+Event Management�Emphasis has 1
+Foodservice Management�Emphasis has 1
+Lodging Management�Emphasis has 1
+Recreation & Park Administration� has 0
+Interpretation�Emphasis has 1
+Natural Resource�Emphasis has 1
+Recreation Sport Management�Emphasis has 1
+Therapeutic Recreation�Emphasis has 1
+BA Art Education has 1
+BA Fine Arts has 1
+BFA Fine Arts has 1
+BFA Game and Interactive Media Design has 1
+BFA Graphic Design has 1
+Criminal Justice and Criminology has 1
+Psychology has 1
+Sociology has 1
+Biology has 0
+Biomedical has 1
+General has 1
+Environmental Science has 1
+Fisheries & Wildlife Science has 1
+Medical Laboratory Science has 1
+Nuclear Medical Technology has 1
+Communication has 0
+Communication Option has 1
+Theatre and Film Production Option has 1
+Journalism has 1
+Computer Engineering has 1
+Electrical Engineering has 0
+Electrical Engineering has 1
+Electrical Engineering with Biomedical Option has 1
+Computer Science has 1
+Computer Science Education has 1
+Cybersecurity has 1
+Information Technology has 2
+Mechanical Engineering has 1
+Emergency Management has 1
+Applied Science has 1
+Organizational Leadership has 0
+Agriculture Business Concentration has 1
+Child Development Concentration has 1
+Criminal Justice Concentration has 1
+Emergency Management has 1
+Inter-College Concentration has 1
+Military Leadership Concentration has 1
+Psychology Concentration has 1
+Public Relations Concentration has 1
+Professional Studies has 0
+Interdisciplinary Studies Concentration has 1
+Creative Writing has 1
+English has 1
+English for Teacher Licensure has 1
+World Language -Spanish has 1
+World Language with Concentration in Spanish Education for Teacher Licensure has 1
+Health and Exercise Science has 1
+Kinesiology option has 1
+Pre-Allied Health Studies option has 1
+Health and Physical Education for Teacher Licensure has 1
+Rehabilitation Science has 1
+Anthropology and Geography has 1
+History has 1
+International Studies has 1
+Political Science has 1
+Social Studies for Teacher Licensure has 1
+Applied Statistics has 0
+Actuarial Science has 1
+Data Science has 1
+Mathematics has 1
+Mathematics for Teacher Licensure has 1
+Music has 1
+Music for Teacher Licensure has 0
+Instrumental Music Option� has 1
+Keyboard Instrumental Music Option has 1
+Keyboard Vocal Music Option has 1
+Vocal Music Option has 1
+BSN Pre-licensure Program has 1
+RN to BSN Program has 1
+LPN to BSN Program has 1
+Chemistry has 0
+Biochemistry Option has 1
+Environmental Option has 1
+General Option has 1
+Professional Option has 1
+Engineering Physics has 1
+Geology has 0
+Environmental Option has 1
+Petroleum Option has 1
+Professional Option has 1
+Physics has 1
+Physics for Teacher Education has 1
+Accounting has 1
+Finance has 1
+Business Data Analytics has 1
+Business Management has 1
+Digital Marketing has 1
+Health Information Management� has 1
+Elementary Education has 1
+Middle Level Education has 0
+English/Language Arts has 0
+Mathematics has 0
+Social Studies has 0
+Science has 0
+Secondary Education has 0
+Agriculture has 1
+Art has 1
+Computer Science has 1
+English has 1
+Mathematics has 1
+Music Education has 0
+Instrumental Music has 1
+Keyboard Instrumental Music has 1
+Keyboard Vocal Music has 1
+Vocal Music has 1
+Social Studies has 1
+Accelerated Bachelors to Masters Degrees has 0
+Agriculture has 0
+Recreation & Park Administration has 0
+Hospitality Administration has 0
+Art has 0
+Anthropology has 0
+Criminal Justice has 0
+Psychology has 0
+Sociology has 0
+Biological Sciences has 0
+Journalism has 0
+Social Media has 0
+Speech Communication has 0
+Theatre has 0
+Creative Writing has 0
+English has 0
+Film Studies has 0
+French has 0
+German has 0
+Japanese has 0
+Latin American Studies (with language proficiency) has 0
+Latin American Studies (without language proficiency) has 0
+Spanish has 0
+Spanish for Medical Interpretation has 0
+Teaching English as a Second Language has 0
+Emergency Management has 0
+Leadership Studies has 0
+Geography has 0
+History has 0
+Military Science has 0
+Philosophy has 0
+Political Science has 0
+Pre-Law has 0
+Religious Studies has 0
+Strategic Studies has 0
+Rehabilitation Science has 0
+Addictions  has 0
+Aging  has 0
+Child Welfare and Social Services has 0
+Disability Studies has 0
+Recreation Services  has 0
+Mathematics & Statistics has 0
+Chemistry has 0
+Geology has 0
+Physics has 0
+Physical Science has 0
+Accounting has 0
+Economics has 0
+Business Administration has 0
+Business & Entrepreneurship has 0
+Business Data Analytics has 0
+Criminal Justice has 1
+General Education has 0
+Cybersecurity has 1
+Information Technology has 1
+Manufacturing has 1
+Nuclear Technology has 1
+Early Childhood Education has 1
+Business Administration has 1
+Pre-Law has 0
+Pre-Veterinary Medicine has 1
+Advanced Certificate in Data Analytics has 0
+Advanced Certificate in Entrepreneurship has 0
+Advanced Certificate in Human Resource Management has 1
+Certificate of Proficiency in Applied Statistics has 0
+Certificate of Proficiency in Broadcast Journalism has 0
+Certificate of Proficiency in Business Administration has 0
+Certificate of Proficiency in Casino and Gaming Industry has 0
+Certificate of Proficiency in Computer Networking has 0
+Certificate of Proficiency in Computer Programming has 0
+Certificate of Proficiency in Diversity Studies has 0
+Certificate of Proficiency in Microsoft Applications has 0
+Certificate of Proficiency in Performance has 0
+Certificate of Proficiency in Print Journalism has 0
+Certificate of Proficiency in Professional Leadership has 0
+Certificate of Proficiency in Psychology has 0
+Certificate of Proficiency in Public Relations Journalism has 0
+Certificate of Proficiency in Spanish for Medical Interpretation has 0
+Certificate of Proficiency in Teaching English to Speakers of Other Languages has 0
+Certificate of Proficiency in Technical and Professional Communications has 0
+Technical Certificate in Casino and Gaming Industry Management has 0

@@ -1,26 +1,9 @@
 #!/usr/bin/python3
 
-#Automatically download and display ATU degree programs as well-formatted flowcharts
-
-#Libaries used:
-#	BeautifulSoup4 (python-beautifulsoup4) - HTML/XML parsing
-#	lxml (python-lxml) - fast HTML/XML parser for bs4
-#	requests (python-requests)- HTTP requests
+#Simple catalog term/subject/course browser
 
 from lib import catalog
-
-def test_id(database, name):
-	while True:
-		test = ''
-		while test == '':
-			print('Enter ' + name + ':', end = ' ')
-			test = input().upper()
-			if test == '':
-				for i in database:
-					print(i.id + '\t' + i.name)
-		for i in database:
-			if i.id == test:
-				return i
+from lib.interactive import test_id
 
 def main():
 	print('Catalog Browser')

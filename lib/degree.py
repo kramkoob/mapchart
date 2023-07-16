@@ -21,7 +21,7 @@ from os.path import join
 _url_degree_list = r'https://www.atu.edu/catalog/current/undergraduate/programs.php'
 _url_root = r'https://www.atu.edu'
 
-class semester():
+class Semester():
 	def __init__(self, id, name):
 		self.name = name
 		self.id = id
@@ -30,7 +30,7 @@ class semester():
 		if isinstance(entry, catalog.course):
 			self.entries.append(entry)
 
-class degree():
+class Degree():
 	def __init__(self, id, name, term):
 		self.name = name
 		self.id = id
@@ -110,7 +110,7 @@ def degrees(term):
 						if len(accordions) > 0:
 							degreefound = True
 							degreesfound = degreesfound + 1
-							degreefind = degree(testlink, degreepagetest.find('div', 'col-lg-8 mb-5').find('h1').get_text(), term)
+							degreefind = Degree(testlink, degreepagetest.find('div', 'col-lg-8 mb-5').find('h1').get_text(), term)
 							degreeslinks_good.append(degreefind)
 	#cache.save(degreeslinks_good, filename_good)
 	#cache.save(degreeslinks_bad, filename_bad)
@@ -124,4 +124,4 @@ def degrees(term):
 
 if __name__ == '__main__':
 	print('degree.py')
-	degrees = degrees(catalog.term('202370'))
+	degrees = degrees(catalog.terms()[1])

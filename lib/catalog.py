@@ -18,7 +18,7 @@ _url_endpoint = 'https://www.atu.edu/catalog/archive/app/descriptions/catalog-da
 _url_terms = 'https://www.atu.edu/catalog/archive/app/descriptions/index.php'
 
 #Classes
-class term:
+class Term:
 	def __init__(self, id, name='null'):
 		self.name = name
 		self.id = self._check(id)
@@ -29,7 +29,7 @@ class term:
 			raise Exception('invalid term year ' + id)
 		return id
 
-class course:
+class Course:
 	def __init__(self):
 		self.name = 'null'
 		self.id = '0000'
@@ -68,7 +68,7 @@ class course:
 					search[k] = self
 			cache.save(search, join(term.id, self.subject.id, 'courses.dat'))
 
-class subject:
+class Subject:
 	def __init__(self, name='null', id='0000'):
 		self.name = name
 		self.id = self._check(id)
@@ -110,7 +110,7 @@ def terms():
 		termselect = termspage_bs.find(id='term')
 		termstags = termselect.find_all('option')
 		for i in termstags:
-			terms.append(term(i['value'], i.get_text()))
+			terms.append(Term(i['value'], i.get_text()))
 		cache.save(terms, 'terms.dat')
 	finally:
 		return terms
@@ -126,7 +126,7 @@ def subjects(term):
 		for i in subjectsxml:
 			name = _cdata_text(i.find('description').get_text())
 			id = i.find('code').get_text()
-			subjects.append(subject(name, id))
+			subjects.append(Subject(name, id))
 		cache.save(subjects, filename)
 	finally:
 		return subjects
@@ -142,7 +142,7 @@ def courses(term, subject):
 		for i in coursesxml:
 			name = _cdata_text(i.find('title').get_text())
 			id = i.find('number').get_text()
-			courses.append(course(name, id, subject))
+			courses.append(Course(name, id, subject))
 		cache.save(courses, filename)
 	finally:
 		return courses

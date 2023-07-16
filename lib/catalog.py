@@ -67,6 +67,7 @@ class Course:
 				if v.id == self.id:
 					search[k] = self
 			cache.save(search, join(term.id, self.subject.id, 'courses.dat'))
+		return self.desc
 
 class Subject:
 	def __init__(self, name='null', id='0000'):

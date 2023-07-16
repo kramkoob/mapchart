@@ -8,7 +8,7 @@
 #	number: 4133, 1013 etc.
 #	campus: B (All), M (Russellville), 1 (Ozark)
 
-import cache
+from lib import cache
 
 import requests
 import bs4 as bs

@@ -12,8 +12,7 @@
 # https://www.atu.edu/catalog/archive/undergraduate/2016/live/programs.php
 #Prior to 2015: pdf format
 
-import cache
-import catalog
+from lib import cache, catalog
 
 import requests
 import bs4 as bs

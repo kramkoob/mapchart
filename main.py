@@ -7,7 +7,7 @@
 #	lxml (python-lxml) - fast HTML/XML parser for bs4
 #	requests (python-requests)- HTTP requests
 
-import catalog
+from lib import catalog
 
 def test_id(database, name):
 	while True:

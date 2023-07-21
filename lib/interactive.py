@@ -2,18 +2,14 @@
 
 #Assist functions for interactivity.
 
-def test_id(database, name='query', input=None):
-	if input == None:
-		while True:
-			test = ''
-			while test == '':
-				print('Enter ' + name + ':', end = ' ')
-				test = input().upper()
-				if test == '':
-					for i in database:
-						print(i.id + '\t' + i.name)
-	else:
-		test = input.upper()
+def test_id(database, name='query', test=''):
+	while test == '':
+		print('Enter ' + name + ':', end = ' ')
+		test = input()
+		if test == '':
+			for i in database:
+				print(i.id + '\t' + i.name)
+	test = test.upper()
 	for i in database:
 		if i.id == test:
 			return i

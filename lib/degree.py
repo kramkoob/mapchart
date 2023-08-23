@@ -42,86 +42,101 @@ class Degree():
 		self.name = self.name + ' Track ' + str(n)
 
 def degrees(term):
-	#filename = join(term.id, 'degrees.dat')
-	filename_good = join(term.id, 'degrees-good.dat')
-	filename_bad = join(term.id, 'degreess-bad.dat')
-	#try:
-	#	degrees = cache.load(filename)
-	#except:
-	#	try:
-	#		degreeslinks_good = cache.load(filename_good)
-	#		degreeslinks_bad = cache.load(filename_bad)
-	#	except:
-	degreeindex = bs.BeautifulSoup(requests.get(_url_degree_list).text, 'lxml')
-	degreelist = degreeindex.find('div', id='panel-d21e114')
-	degreelist.extend(degreeindex.find('div', id='panel-d21e1219'))
-	degreeslinks = degreelist.find_all('a')
-	degreepages = list()
-	print('beginning pass 1')
-	print('\t' + str(len(degreeslinks)) + ' candidates')
-	for i in degreeslinks:
-		degreelink = _url_root + i['href']
-		degreepage = bs.BeautifulSoup(requests.get(degreelink).text, 'lxml')
-		degreepages.append(degreepage)
-	print('\tparsing...')
-	degreeslinks_good = list()
-	degreeslinks_bad = list()
-	for f, i in enumerate(degreepages):
-		degree_bad = True
-		accordions = i.find_all('div', 'accordion')
-		degree_multitrack = (len(accordions) > 1)
-		for k in range(len(accordions)):
-			degree_bad = False
-			degree_name = i.find('div', 'col-lg-8 mb-5').find('h1').get_text()
-			degree_id = degreeslinks[f]['href']
-			degreefind = degree(degree_id, degree_name, term)
-			if degree_multitrack:
-				degreefind.add_track(k + 1)
-			degreeslinks_good.append(degreefind)
-		if degree_bad:
-			degreeslinks_bad.append(degreeslinks[f]['href'])
-	print('\t' + str(len(degreeslinks_good)) + ' verified')
-	print('beginning pass 2')
-	print('\t' + str(len(degreeslinks_bad)) + ' to recheck')
-	degreesfound = 0
-	for key, i in enumerate(degreeslinks_bad):
-		degreepage = bs.BeautifulSoup(requests.get(_url_root + i).text, 'lxml')
-		degreepagecontent = degreepage.find('div', 'col-lg-8 mb-5')
-		degreeslinks = degreepagecontent.find_all('a')
-		for k in degreeslinks:
-			degreefound = False
-			for j in degreeslinks_good:
-				try:
-					if k['href'][:len(_url_root)] == _url_root:
-						testlink = k['href'][len(_url_root):]
-					else:
-						testlink = k['href']
-				except:
-					degreefound = True
-					break
-				if testlink == j.id:
-					degreefound = True
-					break
-			if not degreefound:
-					if testlink[-1] != '#' and testlink[-9:-1] != 'index.php' and testlink[-10:-1] != 'index.php#' and 'catalog' in testlink:
+	filename = join(term.id, 'degrees.dat')
+	try:
+		degrees = cache.load(filename)
+	except:
+		print('Refreshing degrees for ' + term.name + ', this may take some time...')
+		degreeindex = bs.BeautifulSoup(requests.get(_url_degree_list).text, 'lxml')
+		degreelist = degreeindex.find('div', id='panel-d21e114')
+		try:
+			degreelist.extend(degreeindex.find('div', id='panel-d21e1219'))
+		except:
+			pass
+		degreeslinks = degreelist.find_all('a')
+		degreepages = list()
+		#print('beginning pass 1')
+		#print('\t' + str(len(degreeslinks)) + ' candidates')
+		for i in degreeslinks:
+			degreelink = _url_root + i['href']
+			degreepage = bs.BeautifulSoup(requests.get(degreelink).text, 'lxml')
+			degreepages.append(degreepage)
+		#print('\tparsing...')
+		degrees = list()
+		degrees_retry = list()
+		for f, i in enumerate(degreepages):
+			degree_bad = True
+			accordions = i.find_all('div', 'accordion')
+			degree_multitrack = (len(accordions) > 1)
+			for k in range(len(accordions)):
+				degree_bad = False
+				degree_name = i.find('div', 'col-lg-8 mb-5').find('h1').get_text()
+				degree_id = degreeslinks[f]['href']
+				degree = Degree(degree_id, degree_name, term)
+				if degree_multitrack:
+					degree.add_track(k + 1)
+				degrees.append(degree)
+			if degree_bad:
+				degrees_retry.append(degreeslinks[f]['href'])
+		#print('\t' + str(len(degrees)) + ' verified')
+		#print('beginning pass 2')
+		#print('\t' + str(len(degrees_retry)) + ' to recheck')
+		degreesfound = 0
+		for i in degrees_retry:
+			degreepage = bs.BeautifulSoup(requests.get(_url_root + i).text, 'lxml')
+			degreepagecontent = degreepage.find('div', 'col-lg-8 mb-5')
+			degreeslinks = degreepagecontent.find_all('a')
+			for k in degreeslinks:
+				degreefound = False
+				for j in degrees:
+					try:
+						if k['href'][:len(_url_root)] == _url_root:
+							testlink = k['href'][len(_url_root):]
+						else:
+							testlink = k['href']
+					except:
+						degreefound = True
+						break
+					if testlink == j.id:
+						degreefound = True
+						break
+				if degreefound:
+					if testlink[-1] != '#' and testlink[-9:-1] != 'index.php' and testlink[-10:-1] != 'index.php#' and '/catalog/current' in testlink:
 						degreelink = _url_root + testlink
 						degreepagetest = bs.BeautifulSoup(requests.get(degreelink).text, 'lxml')
 						accordions = degreepagetest.find_all('div', 'accordion')
 						if len(accordions) > 0:
 							degreefound = True
 							degreesfound = degreesfound + 1
-							degreefind = Degree(testlink, degreepagetest.find('div', 'col-lg-8 mb-5').find('h1').get_text(), term)
-							degreeslinks_good.append(degreefind)
-	#cache.save(degreeslinks_good, filename_good)
-	#cache.save(degreeslinks_bad, filename_bad)
-	#	finally:
-	print('\t' + str(degreesfound) + ' rechecked valid')
-	print(str(len(degreeslinks_good)) + ' total:')
-	for i in degreeslinks_good:
-		print('\t' + i.name)
-	#finally:
-	return degreeslinks_good
+							degree = Degree(testlink, degreepagetest.find('div', 'col-lg-8 mb-5').find('h1').get_text(), term)
+							degrees.append(degree)
+				else:
+					break
+		#print('\t' + str(degreesfound) + ' rechecked valid')
+		#print('beginning pass 3: remove duplicates by name')
+		rem = list()
+		for deg1 in degrees:
+			for k, deg2 in enumerate(degrees):
+				if deg1 is deg2:
+					break
+				name1 = deg1.name
+				name2 = deg2.name
+				if name1 == name2:
+					if(deg1.id != deg2.id):
+						print("*** DEGREE HAS SAME NAME AND DIFFERENT LINK ***")
+						print('\tLink 1: ' + deg1.id)
+						print('\tLink 2: ' + deg2.id)
+					else:
+						rem.append(k)
+		for k in reverse(rem):
+			degrees.remove(k)
+		#print('\t' + str(len(rem)) + ' duplicates removed')
+		print(str(len(degrees)) + ' total:')
+		#for i in degrees:
+		#	print('\t' + i.name)
+		cache.save(degrees, filename)
+	finally:
+		return degrees
 
 if __name__ == '__main__':
 	print('degree.py')
-	degrees = degrees(catalog.terms()[1])

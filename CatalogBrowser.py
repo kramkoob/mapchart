@@ -10,10 +10,17 @@ def main():
 	print('At any blank prompt, hit enter to list all options')
 	terms = catalog.terms()
 	while True:
-		term = test_id(terms, "catalog term")
+		term = None
+		while term == None:
+			term = test_id(terms, name = 'catalog term')
 		subjects = catalog.subjects(term)
-		courses = catalog.courses(term, test_id(subjects, "subject"))
-		course = test_id(courses, "course number")
+		subject = None
+		while subject == None:
+			subject = test_id(subjects, name = 'subject')
+		courses = catalog.courses(term, subject)
+		course = None
+		while course == None:
+			course = test_id(courses, name = 'course number')
 		course.get_desc(term)
 		print(course.subject.id + ' ' + course.id + ' ' + course.name)
 		print(course.desc)

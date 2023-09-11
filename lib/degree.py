@@ -114,28 +114,26 @@ def degrees(term):
 					break
 		#print('\t' + str(degreesfound) + ' rechecked valid')
 		#print('beginning pass 3: remove duplicates by name')
-		rem = list()
 		for deg1 in degrees:
 			for k, deg2 in enumerate(degrees):
-				if deg1 is deg2:
+				if (deg1 is deg2) or not (deg1 in degrees) or not (deg2 in degrees):
 					break
 				name1 = deg1.name
 				name2 = deg2.name
 				if name1 == name2:
 					if(deg1.id != deg2.id):
 						print("*** DEGREE HAS SAME NAME AND DIFFERENT LINK ***")
+						print('\tDegree: ' + name1)
 						print('\tLink 1: ' + deg1.id)
 						print('\tLink 2: ' + deg2.id)
 					else:
-						rem.append(k)
-		for k in reverse(rem):
-			degrees.remove(k)
+						degrees.remove(deg2)
 		#print('\t' + str(len(rem)) + ' duplicates removed')
-		print(str(len(degrees)) + ' total:')
 		#for i in degrees:
 		#	print('\t' + i.name)
 		cache.save(degrees, filename)
 	finally:
+		print('Loaded ' + str(len(degrees)) + ' degrees')
 		return degrees
 
 if __name__ == '__main__':

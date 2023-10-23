@@ -11,3 +11,7 @@ v0
 v0+v1
 tabula-pc
 *.pdf
+
+#ignore data and lib/data created by newer versions
+**/data
+**/lib

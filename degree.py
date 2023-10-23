@@ -16,7 +16,8 @@
 # https://www.atu.edu/catalog/archive/undergraduate/2016/live/programs.php
 #Prior to 2015: pdf format
 
-from lib import cache, catalog
+#from lib import cache, catalog
+import cache, catalog
 
 import requests
 import bs4 as bs
@@ -35,10 +36,9 @@ class Semester():
 			self.entries.append(entry)
 
 class Degree():
-	def __init__(self, id, name, term):
+	def __init__(self, id, name):
 		self.name = name
 		self.id = id
-		self.term = term
 		self.semesters = list()
 	def add_semester(self, name):
 		self.semesters.append(semester(len(self.semesters) + 1, name))
@@ -46,7 +46,8 @@ class Degree():
 		self.name = self.name + ' Track ' + str(n)
 
 def _accordion_to_degrees(degreepage, degreelink):
-	degreelist = list()
+	degreelist = []
+	track = 0
 	# find the div with accordion class
 	accordionelements = degreepage.find_all('div', 'accordion')
 	for _ in accordionelements:
@@ -55,76 +56,78 @@ def _accordion_to_degrees(degreepage, degreelink):
 		degree_name = degreepage.find('div', 'col-lg-8 mb-5').find('h1').get_text()
 		# id is the link to the degree page
 		degree_id = degreelink
-		degree = Degree(degree_id, degree_name, term)
+		degree = Degree(degree_id, degree_name)
 		# one major has two tracks listed on the same page. append track number if that's the case.
-		degree.add_track(k + 1) if len(accordionelements) > 1 else pass
+		if len(accordionelements) > 1:
+			track = track + 1
+			degree.add_track(track)
 		degreelist.append(degree)
 	return degreelist
 
-def degrees(term):
-	filename = join(term.id, 'degrees.dat')
+def degrees():
+	filename = 'undergrad.dat'
 	try:
 		degrees = cache.load(filename)
-	except:
-		print('Refreshing degrees for ' + term.name + ', this may take some time...')
+	except FileNotFoundError:
+		print('Refreshing degrees, this may take some time...')
 		degrees = []
 		# load degree program page
 		degreeindex = bs.BeautifulSoup(requests.get(_url_degree_list).text, 'lxml')
 		# find the list element on the degree program page
 		degreelist = degreeindex.find('div', id='panel-d21e114')
-		try:
-			degreelist.extend(degreeindex.find('div', id='panel-d21e1219'))
-		except:
-			pass
+		degreelist.extend(degreeindex.find('div', id='panel-d21e1219'))
 		# find every anchor tag's href (link) within the degree program list
 		degreelinks = [_url_root + anchortag['href'] for anchortag in degreelist.find_all('a')]
-		# download every linked page in the degree program list - presumably, degree pages, but not always
-		degreepages = [bs.BeautifulSoup(requests.get(degreelink).text, 'lxml') for degreelink in degreelinks]
+		# download every linked page in the degree program list - presumably degree pages, but not always
+		degreepages_texts = [requests.get(degreelink).text for degreelink in degreelinks]
+		degreepages = [bs.BeautifulSoup(degreepage_text, 'lxml') for degreepage_text in degreepages_texts]
 		for degreelink, degreepage in zip(degreelinks, degreepages):
-			degrees = degrees + _accordions_to_degrees(degreelink, degreepage)
-		# remove found degrees' links from degree links
-		notdegreelinks = [degreelink for degreelink in degreelinks if degreelink not in [degree.id for degree in degrees] else None]
-		notdegreelinks = *filter(lambda degreelink: degreelink is not None, degreelinks)
+			degrees.extend(_accordion_to_degrees(degreepage, degreelink))
+		# create list of invalid pages
+		notdegreelinks = [degreelink for degreelink in degreelinks if degreelink not in [degree.id for degree in degrees]]
 		# try to find valid degrees in the remaining invalid pages
-		for notdegreelink in degreelinks:
+		for notdegreelink in notdegreelinks:
 			# all these pages should already be downloaded, so find it
-			notdegreepage = degreepages[index for index,degreelink in enumerate(degreelinks) if notdegreelink is degreelink]
+			notdegreepage = degreepages[degreelinks.index(notdegreelink)]
 			# find the main content of the non-degree page
 			notdegreepage_content = notdegreepage.find('div', 'col-lg-8 mb-5')
 			# find all the anchor tags (links) in the non-degree page
-			notdegreepage_content_links = [anchortag['href'] for anchortag in notdegreepage_content.find_all('a')]
-			# test each link to see if it is a degree page
-			for degreelink in notdegreepage_content_links:
-				# determine if degree has been found already
-				degreefound = False
+			anchortags = notdegreepage_content.find_all('a')
+			notdegreepage_links = []
+			for anchortag in anchortags:
 				try:
-					# remove preceding root url if it exists
-					testlink = degreelink[len(_url_root):] if degreelink[:len(_url_root)] is _url_root else degreelink
-					for j in degrees:
-						# if degree already exists, skip
-						if testlink == j.id:
-							degreefound = True
-							break
-				except:
-					# if there was an error determining if the root url exists, check it anyway
-					degreefound = True
-				if degreefound:
-					# check if link is valid e.g. not an index page
-					if testlink[-1] != '#' and testlink[-9:-1] != 'index.php' and testlink[-10:-1] != 'index.php#' and '/catalog/current' in testlink:
-						# download test page
-						degreepage = bs.BeautifulSoup(requests.get(_url_root + testlink).text, 'lxml')
-						degrees = degrees + _accordions_to_degrees(degreepage, _url_root + testlink)
+					anchortag_href = anchortag['href']
+					# limit a little bit to what 
+					if "#" not in anchortag_href and "catalog/" in anchortag_href:
+						notdegreepage_links.append(anchortag_href)
+				except KeyError:
+					pass
+			#	test each link to see if it is a degree page
+			for degreelink in notdegreepage_links:
+				testlink = _url_root + (degreelink[len(_url_root):] if _url_root in degreelink else degreelink)
+				# if degree has not been found already, evaluate
+				if testlink not in [degree.id for degree in degrees]:
+					# download test page
+					degreepage_text = requests.get(testlink).text
+					degreepage = bs.BeautifulSoup(degreepage_text, 'lxml')
+					# test if a program exists in that page
+					degrees.extend(_accordion_to_degrees(degreepage, testlink))
 				else:
 					break
-		# check for duplicate degrees by name and remove
-		degreeids = [degree.id for degree in degrees]
-		degrees = [degree for degree in degrees if degreeids.count(degree.id) is 1 else None]
-		degrees = *filter(lambda degree: degree is not None, degree)
-		# save final degree list to local cache
+		# remove duplicates by link/id and name
+		k = 0
+		while k < len(degrees):
+			if [degree.id for degree in degrees].count(degrees[k].id) > 1 or [degree.name for degree in degrees].count(degrees[k].name) > 1:
+				del degrees[k]
+				k -= 1
+			k += 1
+		# save final list to local cache
 		cache.save(degrees, filename)
-	finally:
-		print('Loaded ' + str(len(degrees)) + ' degrees')
-		return degrees
+	print('Loaded ' + str(len(degrees)) + ' degrees')
+	return degrees
 
 if __name__ == '__main__':
 	print('degree.py')
+	term = catalog.terms()[2]
+	degreelist = degrees()
+	

@@ -5,6 +5,7 @@
 # DEV to-do:
 # 	Fill out semesters in degrees from accordions (_accordions_to_degrees)
 # 	Degree descriptions (_accordions_to_degrees)
+#		Access older catalogs (see below links)
 
 #Current:
 #	https://www.atu.edu/catalog/dev/undergraduate/programs.php
@@ -36,16 +37,17 @@ class Semester():
 			self.entries.append(entry)
 
 class Degree():
-	def __init__(self, id, name):
+	def __init__(self, id, name, term):
 		self.name = name
 		self.id = id
-		self.semesters = list()
+		self.semesters = []
+		self.term = term
 	def add_semester(self, name):
 		self.semesters.append(semester(len(self.semesters) + 1, name))
 	def add_track(self, n):
 		self.name = self.name + ' Track ' + str(n)
 
-def _accordion_to_degrees(degreepage, degreelink):
+def _accordion_to_degrees(degreepage, degreelink, subjectIndex):
 	degreelist = []
 	track = 0
 	# find the div with accordion class
@@ -56,7 +58,7 @@ def _accordion_to_degrees(degreepage, degreelink):
 		degree_name = degreepage.find('div', 'col-lg-8 mb-5').find('h1').get_text()
 		# id is the link to the degree page
 		degree_id = degreelink
-		degree = Degree(degree_id, degree_name)
+		degree = Degree(degree_id, degree_name, term)
 		# one major has two tracks listed on the same page. append track number if that's the case.
 		if len(accordionelements) > 1:
 			track = track + 1
@@ -64,12 +66,14 @@ def _accordion_to_degrees(degreepage, degreelink):
 		degreelist.append(degree)
 	return degreelist
 
-def degrees():
-	filename = 'undergrad.dat'
+def degrees(term=catalog.terms()[0]):
+	filename = join(term.id, 'degrees.dat')
 	try:
 		degrees = cache.load(filename)
 	except FileNotFoundError:
 		print('Refreshing degrees, this may take some time...')
+		print('Semester courses will be populated using ' + term.name)
+		subjectIndex = catalog.subjects(term)
 		degrees = []
 		# load degree program page
 		degreeindex = bs.BeautifulSoup(requests.get(_url_degree_list).text, 'lxml')
@@ -82,7 +86,7 @@ def degrees():
 		degreepages_texts = [requests.get(degreelink).text for degreelink in degreelinks]
 		degreepages = [bs.BeautifulSoup(degreepage_text, 'lxml') for degreepage_text in degreepages_texts]
 		for degreelink, degreepage in zip(degreelinks, degreepages):
-			degrees.extend(_accordion_to_degrees(degreepage, degreelink))
+			degrees.extend(_accordion_to_degrees(degreepage, degreelink, subjectIndex))
 		# create list of invalid pages
 		notdegreelinks = [degreelink for degreelink in degreelinks if degreelink not in [degree.id for degree in degrees]]
 		# try to find valid degrees in the remaining invalid pages
@@ -111,7 +115,7 @@ def degrees():
 					degreepage_text = requests.get(testlink).text
 					degreepage = bs.BeautifulSoup(degreepage_text, 'lxml')
 					# test if a program exists in that page
-					degrees.extend(_accordion_to_degrees(degreepage, testlink))
+					degrees.extend(_accordion_to_degrees(degreepage, testlink, subjectIndex))
 				else:
 					break
 		# remove duplicates by link/id and name
@@ -128,6 +132,5 @@ def degrees():
 
 if __name__ == '__main__':
 	print('degree.py')
-	term = catalog.terms()[2]
 	degreelist = degrees()
 	

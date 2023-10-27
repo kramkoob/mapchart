@@ -34,7 +34,7 @@ class Course:
 	def __init__(self):
 		self.name = 'null'
 		self.id = '0000'
-		self.subject = subject()
+		self.subject = Subject()
 		self.desc = 'null'
 	def __init__(self, name, id, subject):
 		self.name = name
@@ -78,7 +78,7 @@ class Subject:
 		if not isinstance(id, str):
 			raise Exception('got ' + str(type(id)) + ', requires <class \'str\'>')
 		if len(id) > 4:
-			raise Exception('invalid subject code' + id)
+			raise Exception('invalid subject code ' + id)
 		return id
 
 #Private methods

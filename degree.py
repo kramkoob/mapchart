@@ -174,14 +174,10 @@ if __name__ == '__main__':
 	degree = degreelist[-1]
 	
 	print(degree.name)
-	for semester in degree.semesters:
-		print('\t' + semester.season + ' of ' + semester.year + ' year')
-		for course in semester.courses:
-			course_subject = course.split(' ')[0]
-			course_id = course.split(' ')[1]
-			subject = interactive.test_id(subjects, test = course_subject)
-			catcourses = catalog.courses(term, subject)
-			catcourse = interactive.test_id(catcourses, test = course_id)
-			print('\t\t' + catcourse.subject.name + ' ' + catcourse.id + ': ' + catcourse.name)
-		for other in semester.others:
-			print('\t\t' + other)
+	course = degree.semesters[0].courses[0]
+	course_subject = course.split(' ')[0]
+	course_id = course.split(' ')[1]
+	subject = interactive.test_id(subjects, test = course_subject)
+	catcourses = catalog.courses(term, subject)
+	catcourse = interactive.test_id(catcourses, test = course_id)
+	print(catcourse.get_desc(term))

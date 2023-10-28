@@ -1,10 +1,5 @@
-# mapchart/main
- Python library and assortment of helping scripts to manipulate catalog data on the university's servers, with the eventual goal of automatically generating degree plan flowcharts for every degree plan the university offers
-
-Libaries used (Arch Linuxpackage name):
- - BeautifulSoup4 (python-beautifulsoup4): HTML/XML parsing
- - lxml (python-lxml): fast HTML/XML parser for bs4
- - requests (python-requests): HTTP requests
+# mapchart/examples
+ Test scripts and etc. that use the mapchart library. Get it from the main branch and put it in a folder named lib in the same location as the script to run
 
 Libaries for MakeCourseDescPdf.py:
 - pdfkit (aur: python-pdfkit, which requires aur: wkhtmltopdf, which requires aur: qt5-webkit): Create PDF files from HTML templates

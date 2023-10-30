@@ -12,8 +12,10 @@ def main():
 	try:
 		query = input("[G]raduate or [U]ndergraduate: ").strip().upper()[0]
 	except:
-		print("bruh.")
-	index = subjects.SubjectIndex(query == 'G')
+		print("Using undergraduate catalog")
+		query = 'U'
+	finally:
+		index = subjects.SubjectIndex(query == 'G')
 	index.populate()
 	
 	# Ask user for subject or course to identify
@@ -47,9 +49,10 @@ def main():
 						print(result.prefix + " " + str(result.number) + ": " + result.name)
 						print("Level: " + result.level)
 						print("Hours: " + str(result.hours))
-						print("Prerequisites:")
+						print("Prerequisites:", end = ' ')
 						for prereq in result.prereqs:
-							print(prereq)
+							print(prereq, end=', ')
+						print()
 						print(result.desc)
 				except:
 					print("Didn't quite understand that...")

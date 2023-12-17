@@ -8,8 +8,7 @@
 # html.parser: go through and find html elements and stuff. rip data from html
 # pyflowchart: processing/creating flowchart.js code
 
-import subjects
-import catalog
+from mapchart import subjects,catalog
 
 def main():
 	# Populate subjects index

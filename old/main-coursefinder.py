@@ -4,8 +4,7 @@
 # requests: get documents from web
 # html.parser: go through and find html elements and stuff. rip data from html
 
-import subjects
-import catalog
+from mapchart import subjects,catalog
 
 def main():
 	# Populate subjects index

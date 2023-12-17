@@ -1,17 +1,13 @@
-#notepad++ enjoys making local backups.
-#no problem, but keep the repo uncluttered
+#ignore backup files
 *.bak
 
-#tabula and includes modifiy a bunch of files when it's used, so don't
+#ignore compiled python files
 **/__pycache__
 *.pyc
 
-#ignore v0 and v0+v1 and tabula-pc
-v0
-v0+v1
-tabula-pc
+#ignore testing pdf files
 *.pdf
 
-#ignore data and lib/data created by newer versions
+#ignore data files
 **/data
 **/lib

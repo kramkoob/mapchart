@@ -2,6 +2,8 @@
 
 #Create simple PDFs containing a course's information from the catalog
 
+#Library used: pdfkit (aur: python-pdfkit, which requires aur: wkhtmltopdf, which requires aur: qt5-webkit): Create PDF files from HTML templates
+
 '''
 Sample course list for Electrical Engineering:
 ENGL 1013

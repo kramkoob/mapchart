@@ -9,11 +9,12 @@
 #	campus: B (All), M (Russellville), 1 (Ozark)
 
 #from lib import cache
-import cache
 
 import requests
 import bs4 as bs
 from os.path import join
+
+_E_TERMS_FAILED = 'Failed to load catalog terms. Perhaps the catalog website was updated?'
 
 _url_endpoint = 'https://www.atu.edu/catalog/archive/app/descriptions/catalog-data.php'
 _url_terms = 'https://www.atu.edu/catalog/archive/app/descriptions/index.php'
@@ -114,8 +115,9 @@ def terms():
 		for i in termstags:
 			terms.append(Term(i['value'], i.get_text()))
 		cache.save(terms, 'terms.dat')
-	finally:
-		return terms
+	if len(terms) == 0:
+		raise Exception(_E_TERMS_FAILED)
+	return terms
 
 def subjects(term):
 	filename = join(term.id, 'subjects.dat')
@@ -130,8 +132,7 @@ def subjects(term):
 			id = i.find('code').get_text()
 			subjects.append(Subject(name, id))
 		cache.save(subjects, filename)
-	finally:
-		return subjects
+	return subjects
 
 def courses(term, subject):
 	filename = join(term.id, subject.id, 'courses.dat')
@@ -146,8 +147,15 @@ def courses(term, subject):
 			id = i.find('number').get_text()
 			courses.append(Course(name, id, subject))
 		cache.save(courses, filename)
-	finally:
-		return courses
+	return courses
 
 if __name__ == '__main__':
+	import cache
 	print('Salutations from catalog.py')
+	termList = terms()
+	print('ATU\'s catalog goes back ' + str(len(termList)) + ' terms')
+else:
+	try:
+		from . import cache
+	except ImportError:
+		import cache

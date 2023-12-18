@@ -18,7 +18,6 @@
 #Prior to 2015: pdf format
 
 #from lib import cache, catalog
-import cache, catalog, interactive
 
 import requests
 import bs4 as bs
@@ -103,7 +102,7 @@ def _accordion_to_degrees(degreepage, degreelink, term):
 		degreelist.append(degree)
 	return degreelist
 
-def degrees(term=catalog.terms()[0]):
+def degrees(term):
 	filename = join(term.id, 'degrees.dat')
 	try:
 		degrees = cache.load(filename)
@@ -167,6 +166,7 @@ def degrees(term=catalog.terms()[0]):
 
 if __name__ == '__main__':
 	print('degree.py')
+	import cache, catalog, interactive
 	
 	term = catalog.terms()[2]
 	degreelist = degrees(term = term)
@@ -181,3 +181,5 @@ if __name__ == '__main__':
 	catcourses = catalog.courses(term, subject)
 	catcourse = interactive.test_id(catcourses, test = course_id)
 	print(catcourse.get_desc(term))
+else:
+	from . import cache, catalog, interactive

@@ -4,6 +4,8 @@
 
 #Library used: pdfkit (aur: python-pdfkit, which requires aur: wkhtmltopdf, which requires aur: qt5-webkit): Create PDF files from HTML templates
 
+# wkhtmltopdf is only detected on Linux at the moment. May be adjusted in the future, but the absolute path importing is lame.
+
 '''
 Sample course list for Electrical Engineering:
 ENGL 1013
@@ -46,8 +48,9 @@ ELEG 4122
 ELEG 4192
 '''
 
-from lib import catalog
-from lib.interactive import test_id
+from mapchart import catalog
+from mapchart.interactive import test_id
+
 from sys import stdin
 import os
 import pdfkit
@@ -80,8 +83,8 @@ def main():
 		print('Init template... ', end=' ')
 		#jenv = Environment(loader=FileSystemLoader('.'))
 		#jtemp = jenv.get_template("template.html")
-        jenv = Environment()
-        jtemp = jenv.from_string(_TEMPLATE)
+		jenv = Environment()
+		jtemp = jenv.from_string(_TEMPLATE)
 		print('done')
 
 		errors = 0

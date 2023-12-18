@@ -4,11 +4,11 @@
 #Generate all class pdf files given a degree
 #First implementation of degree handling
 
-from lib import catalog, degree
+import mapchart
 
 def main():
 	print('AutoDegreePdf')
-	degrees = degree.degrees(catalog.terms()[1])
+	degrees = mapchart.degree.degrees(mapchart.catalog.terms()[1])
 	
 
 if __name__ == '__main__':

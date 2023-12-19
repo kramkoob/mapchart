@@ -168,7 +168,7 @@ if __name__ == '__main__':
 	print('degree.py')
 	import cache, catalog, interactive
 	
-	term = catalog.terms()[2]
+	term = catalog.terms()[0]
 	degreelist = degrees(term = term)
 	subjects = catalog.subjects(term)
 	degree = degreelist[-1]

@@ -104,6 +104,7 @@ def _cdata_text(string):
 
 #Public methods
 def terms():
+	'''
 	try:
 		terms = cache.load('terms.dat')
 	except FileNotFoundError:
@@ -117,6 +118,9 @@ def terms():
 		cache.save(terms, 'terms.dat')
 	if len(terms) == 0:
 		raise Exception(_E_TERMS_FAILED)
+	'''
+	print("NOTE: The catalog access backend was broken in the recent website update. The Spring 2024 and Fall 2023 terms are the only ones manually available until a solution is found.")
+	terms=[Term('202420', 'Spring 2024'), Term('202380', 'Fall 2023')]
 	return terms
 
 def subjects(term):

@@ -1,4 +1,4 @@
 if(__name__ == '__main__'):
-	raise Exception('Init should never be run')
+	raise Exception
 else:
-	from . import cache, catalog, degree, interactive
+	from . import catalog

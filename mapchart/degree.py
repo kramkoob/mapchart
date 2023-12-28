@@ -1,10 +1,8 @@
-#!/usr/bin/python3
-
-#Degree program access
+#Program program access
 
 # DEV to-do:
-# 	Fill out semesters in degrees from accordions (_accordions_to_degrees)
-# 	Degree descriptions (_accordions_to_degrees)
+# 	Fill out semesters in programs from accordions (_accordions_to_programs)
+# 	Program descriptions (_accordions_to_programs)
 #		Access older catalogs (see below links)
 
 #Current:
@@ -19,11 +17,18 @@
 
 #from lib import cache, catalog
 
+try:
+	from . import cache
+	from .catalog import Catalog as basecatalog
+except ImportError:
+	import cache
+	from catalog import Catalog as basecatalog
+
 import requests
 import bs4 as bs
 from os.path import join
 
-_url_degree_list = r'https://www.atu.edu/catalog/current/undergraduate/programs.php'
+_url_program_list = r'https://www.atu.edu/catalog/current/undergraduate/programs.php'
 _url_root = r'https://www.atu.edu'
 
 class Semester():
@@ -32,20 +37,22 @@ class Semester():
 		self.season = season
 		self.courses = []
 		self.others = []
+		self.misc = []
 		self.hours = None
 	def add_course(self, name, id):
 		self.courses.append(name + ' ' + id)
+	def add_misc(self, name):
+		self.misc.append(name)
 	def add_other(self, name):
 		self.others.append(name)
 	def set_hours(self, hours):
 		self.hours = hours
 
-class Degree():
-	def __init__(self, id, name, term):
+class Program():
+	def __init__(self, id, name):
 		self.name = name
 		self.id = id
 		self.semesters = []
-		self.term = term
 	def _add_semester(self, year, season):
 		semester = Semester(year, season)
 		self.semesters.append(semester)
@@ -76,110 +83,142 @@ class Degree():
 							try:
 								if course_subject.upper() == course_subject and str(int(course_id)) == course_id:
 									semester.add_course(course_subject, course_id)
+								else:
+									semester.add_misc(course_name)
 							except ValueError:
 								if course_id.count('X') > 2:
 									semester.add_other(course_name)
 								else:
 									print('unsure what to do with' + course_name)
 
-def _accordion_to_degrees(degreepage, degreelink, term):
-	degreelist = []
-	track = 0
-	# find the div with accordion class
-	accordionelements = degreepage.find_all('div', 'accordion')
-	for accordionelement in accordionelements:
-		# create degree
-		# name found from h1 header at top of page
-		degree_name = degreepage.find('div', 'col-lg-8 mb-5').find('h1').get_text()
-		# id is the link to the degree page
-		degree_id = degreelink
-		degree = Degree(degree_id, degree_name, term)
-		# one major has two tracks listed on the same page. append track number if that's the case.
-		if len(accordionelements) > 1:
-			track = track + 1
-			degree.add_track(track)
-		degree.populate_semesters(accordionelement)
-		degreelist.append(degree)
-	return degreelist
-
-def degrees(term):
-	filename = join(term.id, 'degrees.dat')
-	try:
-		degrees = cache.load(filename)
-	except FileNotFoundError:
-		print('Refreshing degrees, this may take some time...')
-		degrees = []
-		# load degree program page
-		degreeindex = bs.BeautifulSoup(requests.get(_url_degree_list).text, 'lxml')
-		# find the list element on the degree program page
-		degreelist = degreeindex.find('div', id='panel-d21e114')
-		degreelist.extend(degreeindex.find('div', id='panel-d21e1219'))
-		# find every anchor tag's href (link) within the degree program list
-		degreelinks = [_url_root + anchortag['href'] for anchortag in degreelist.find_all('a')]
-		# download every linked page in the degree program list - presumably degree pages, but not always
-		degreepages_texts = [requests.get(degreelink).text for degreelink in degreelinks]
-		degreepages = [bs.BeautifulSoup(degreepage_text, 'lxml') for degreepage_text in degreepages_texts]
-		for degreelink, degreepage in zip(degreelinks, degreepages):
-			degrees.extend(_accordion_to_degrees(degreepage, degreelink, term))
-		# create list of invalid pages
-		notdegreelinks = [degreelink for degreelink in degreelinks if degreelink not in [degree.id for degree in degrees]]
-		# try to find valid degrees in the remaining invalid pages
-		for notdegreelink in notdegreelinks:
-			# all these pages should already be downloaded, so find it
-			notdegreepage = degreepages[degreelinks.index(notdegreelink)]
-			# find the main content of the non-degree page
-			notdegreepage_content = notdegreepage.find('div', 'col-lg-8 mb-5')
-			# find all the anchor tags (links) in the non-degree page
-			anchortags = notdegreepage_content.find_all('a')
-			notdegreepage_links = []
-			for anchortag in anchortags:
-				try:
-					anchortag_href = anchortag['href']
-					# limit a little bit to what 
-					if "#" not in anchortag_href and "catalog/" in anchortag_href:
-						notdegreepage_links.append(anchortag_href)
-				except KeyError:
-					pass
-			#	test each link to see if it is a degree page
-			for degreelink in notdegreepage_links:
-				testlink = _url_root + (degreelink[len(_url_root):] if _url_root in degreelink else degreelink)
-				# if degree has not been found already, evaluate
-				if testlink not in [degree.id for degree in degrees]:
-					# download test page
-					degreepage_text = requests.get(testlink).text
-					degreepage = bs.BeautifulSoup(degreepage_text, 'lxml')
-					# test if a program exists in that page
-					degrees.extend(_accordion_to_degrees(degreepage, testlink, term))
-				else:
-					break
-		# remove duplicates by link/id and name
-		k = 0
-		while k < len(degrees):
-			if [degree.id for degree in degrees].count(degrees[k].id) > 1 or [degree.name for degree in degrees].count(degrees[k].name) > 1:
-				del degrees[k]
-				k -= 1
-			k += 1
-		# save final list to local cache
-		cache.save(degrees, filename)
-	print('Loaded ' + str(len(degrees)) + ' degrees')
-	return degrees
+class ProgramCatalog(basecatalog):
+	def __init__(self):
+		basecatalog.__init__(self, Program)
+		self.filename = 'programs.dat'
+	def _accordion_to_programs(self, programpage, programlink):
+		programlist = []
+		track = 0
+		# find the div with accordion class
+		accordionelements = programpage.find_all('div', 'accordion')
+		for accordionelement in accordionelements:
+			# create program
+			# name found from h1 header at top of page
+			program_name = programpage.find('div', 'col-lg-8 mb-5').find('h1').get_text()
+			# id is the link to the program page
+			program_id = programlink
+			_program = Program(program_id, program_name)
+			# one major has two tracks listed on the same page. append track number if that's the case.
+			if len(accordionelements) > 1:
+				track = track + 1
+				_program.add_track(track)
+			_program.populate_semesters(accordionelement)
+			programlist.append(_program)
+		return programlist
+	def populate(self, force=False, save=True):
+		try:
+			if force:
+				raise FileNotFoundError
+			else:
+				self._contents = cache.load(self.filename)
+		except FileNotFoundError:
+			print('Refreshing programs')
+			# load programs page
+			programindex = bs.BeautifulSoup(requests.get(_url_program_list).text, 'lxml')
+			# find the list element on the program page
+			programlist = programindex.find('div', id='panel-d21e114')
+			programlist.extend(programindex.find('div', id='panel-d21e1219'))
+			# find every anchor tag's href (link) within the program list
+			programlinks = [_url_root + anchortag['href'] for anchortag in programlist.find_all('a')]
+			# download every linked page in the program list - presumably program pages, but not always
+			programpages_texts = [requests.get(programlink).text for programlink in programlinks]
+			programpages = [bs.BeautifulSoup(programpage_text, 'lxml') for programpage_text in programpages_texts]
+			for programlink, programpage in zip(programlinks, programpages):
+				self._contents.extend(self._accordion_to_programs(programpage, programlink))
+			# create list of invalid pages
+			#notprogramlinks = [programlink for programlink in programlinks if programlink not in [program.id for program in self.programs]]
+			notprogramlinks = [programlink for programlink in programlinks if programlink not in [program.id for program in self._contents]]
+			# try to find valid programs in the remaining invalid pages
+			for notprogramlink in notprogramlinks:
+				# all these pages should already be downloaded, so find it
+				notprogrampage = programpages[programlinks.index(notprogramlink)]
+				# find the main content of the non-program page
+				notprogrampage_content = notprogrampage.find('div', 'col-lg-8 mb-5')
+				# find all the anchor tags (links) in the non-program page
+				anchortags = notprogrampage_content.find_all('a')
+				notprogrampage_links = []
+				for anchortag in anchortags:
+					try:
+						anchortag_href = anchortag['href']
+						# limit a little bit to what 
+						if "#" not in anchortag_href and "catalog/" in anchortag_href:
+							notprogrampage_links.append(anchortag_href)
+					except KeyError:
+						pass
+				#	test each link to see if it is a program page
+				for programlink in notprogrampage_links:
+					testlink = _url_root + (programlink[len(_url_root):] if _url_root in programlink else programlink)
+					# if program has not been found already, evaluate
+					if testlink not in [program.id for program in self._contents]:
+						# download test page
+						programpage_text = requests.get(testlink).text
+						programpage = bs.BeautifulSoup(programpage_text, 'lxml')
+						# test if a program exists in that page
+						self._contents.extend(self._accordion_to_programs(programpage, testlink))
+					else:
+						break
+			# remove duplicates by link/id and name
+			k = 0
+			while k < len(self._contents):
+				if ([program.id for program in self._contents].count(self._contents[k].id) > 1 and 'Track' not in self._contents[k].id) or [program.name for program in self._contents].count(self._contents[k].name) > 1:
+					del self._contents[k]
+					k -= 1
+				k += 1
+			# save final list to local cache
+			if save:
+				cache.save(self._contents, self.filename)
+			else:
+				print('Warning: Downloaded fresh data but did not save.')
+		print('Loaded ' + str(len(self._contents)) + ' programs')
+		
 
 if __name__ == '__main__':
-	print('degree.py')
-	import cache, catalog, interactive
+	print('program.py manager')
+	catalog = ProgramCatalog()
 	
-	term = catalog.terms()[0]
-	degreelist = degrees(term = term)
-	subjects = catalog.subjects(term)
-	degree = degreelist[-1]
+	choice = str(input('force refresh? y/n: ')).lower()
+	if choice == 'y':
+		choice = str(input('save locally? y/n: ')).lower()
+		catalog.populate(force=True,save=choice=='y')
+	else:
+		catalog.populate()
 	
-	print(degree.name)
-	course = degree.semesters[0].courses[0]
-	course_subject = course.split(' ')[0]
-	course_id = course.split(' ')[1]
-	subject = interactive.test_id(subjects, test = course_subject)
-	catcourses = catalog.courses(term, subject)
-	catcourse = interactive.test_id(catcourses, test = course_id)
-	print(catcourse.get_desc(term))
-else:
-	from . import cache, catalog, interactive
+	while(True):
+		programs = catalog.search('name', input('Enter name of a program: '))
+		print('Results:')
+		program = None
+		if len(programs) > 1:
+			for k,v in enumerate(programs):
+				print(str(k + 1) + '. ' + v.name)
+			try:
+				program = programs[int(input('Choose a program: ')) - 1]
+			except ValueError:
+				pass
+		if program == None:
+			print('No search results or error in input')
+		else:
+			print(program.name)
+			print(program.id)
+			for k,v in enumerate(program.semesters):
+				print('Semester ' + str(k + 1) + ', ' + v.season + ' of ' + v.year + ' year (' + v.hours + ' hours)')
+				print('Courses:', end=' ')
+				for cr in v.courses:
+					print(cr, end=', ')
+				print('')
+				print('Misc:', end=' ')
+				for mi in v.misc:
+					print(mi, end=', ')
+				print('')
+				print('Others:', end=' ')
+				for ot in v.others:
+					print(ot, end=', ')
+				print('')

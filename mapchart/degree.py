@@ -23,13 +23,16 @@
 #			hours is how many hours the website gives in their tally for credit hours in the semester.
 
 # DEV to-do:
+#		Move to-do to GitHub issues.
 #		Turn the interactive browser into an editor.
 #			Or, split the editor into its own program that just includes this library. That might take some work...
 # 	Add course info since course info is directly in the html tags of each course.
-#		Related to above: Consider re-adding course class - maybe not, to facilitate below being simple
-#		Related to above: Prerequisites. Just by name, no confusing linking.
+#			Related to above: Consider re-adding course class - maybe not, to facilitate below being simple
+#			Related to above: Prerequisites. Just by name, no confusing linking.
 # 	Retrieve program descriptions (_accordions_to_programs)
 #		Auto-remove empty semesters.
+#		The degree pages just give "Elective" sometimes. This was intended to be in the misc. that was removed.
+#			These have footnotes that could be referenced and implemented into descriptions.
 
 try:
 	from . import cache

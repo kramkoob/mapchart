@@ -1,21 +1,35 @@
-#Program program access
+#!/usr/bin/python3
+
+#	Provides online or offline data access. Run this by itself to provide a simple interactive data browser.
+
+#	Includes the cache and catalog files from this library.
+
+#	ProgramCatalog is based on Catalog - see catalog.py for more info on that.
+#		Included in ProgramCatalog are functions that populate itself - namely, populate()
+#			Use force=True to force an online update of fresh data ans save it (unless - see below).
+#			Use save=False to disallow updating the offline database.
+#		Once downloaded, data is saved in the library folder at data/programs.dat by default.
+#	Program is an individual program of study.
+#		Attributes: name, id, semesters.
+#			name is a properly formatted name, e.g. Bachelor of Science in Electrical Engineering
+#     id is the URL where the program data was retrieved from.
+#			semesters is a list of Semester objects - usually 8 of them.
+#	Semester is a semester in a program of study.
+#		Attributes: year, season, courses, others, hours
+#			year is what student academic year, e.g. Freshman, Junior etc.
+#			season is which half of the year - either Fall or Spring
+#			courses is a list of strings (for now) of course names.
+#			others is a list of other things, like "fine arts and humanities" or "SS 1XXX Social Studies" etc.
+#			hours is how many hours the website gives in their tally for credit hours in the semester.
 
 # DEV to-do:
-# 	Fill out semesters in programs from accordions (_accordions_to_programs)
-# 	Program descriptions (_accordions_to_programs)
-#		Access older catalogs (see below links)
-
-#Current:
-#	https://www.atu.edu/catalog/dev/undergraduate/programs.php
-#2022-2023
-# https://www.atu.edu/catalog/2022-23/undergraduate/programs.php
-#2019-2021 and prior
-#	https://www.atu.edu/catalog/archive/undergraduate/2021/programs.php
-#2016-2018
-# https://www.atu.edu/catalog/archive/undergraduate/2016/live/programs.php
-#Prior to 2015: pdf format
-
-#from lib import cache, catalog
+#		Turn the interactive browser into an editor.
+#			Or, split the editor into its own program that just includes this library. That might take some work...
+# 	Add course info since course info is directly in the html tags of each course.
+#		Related to above: Consider re-adding course class - maybe not, to facilitate below being simple
+#		Related to above: Prerequisites. Just by name, no confusing linking.
+# 	Retrieve program descriptions (_accordions_to_programs)
+#		Auto-remove empty semesters.
 
 try:
 	from . import cache
@@ -37,16 +51,14 @@ class Semester():
 		self.season = season
 		self.courses = []
 		self.others = []
-		self.misc = []
 		self.hours = None
 	def add_course(self, name, id):
 		self.courses.append(name + ' ' + id)
-	def add_misc(self, name):
-		self.misc.append(name)
 	def add_other(self, name):
 		self.others.append(name)
 	def set_hours(self, hours):
-		self.hours = hours
+		hours = ''.join([ch if ch.isalnum() else '' for ch in hours])
+		self.hours = int(hours[-2:])
 
 class Program():
 	def __init__(self, id, name):
@@ -73,7 +85,11 @@ class Program():
 				for course_container in course_containers:
 					try:
 						if course_container.find('strong').get_text() == "Total Hours":
-							semester.set_hours(course_container.find_all('td')[1].find('strong').get_text())
+							try:
+								semester.set_hours(course_container.find_all('td')[1].find('strong').get_text())
+							except ValueError:
+								print(f"Warning: Could not obtain hours for {season} semester of {year} year in {self.name}")
+								semester.set_hours("0")
 					except AttributeError:
 						course_links = course_container.find_all('a')
 						for course_link in course_links:
@@ -84,12 +100,12 @@ class Program():
 								if course_subject.upper() == course_subject and str(int(course_id)) == course_id:
 									semester.add_course(course_subject, course_id)
 								else:
-									semester.add_misc(course_name)
+									print(f"Warning: Add course failed for {course_name} {course_subject} {course_id} in {self.name}, semester {season} of {year} year, but did not throw ValueError")
 							except ValueError:
 								if course_id.count('X') > 2:
 									semester.add_other(course_name)
 								else:
-									print('unsure what to do with' + course_name)
+									print('Warning: Absolutely unsure what to do with' + course_name)
 
 class ProgramCatalog(basecatalog):
 	def __init__(self):
@@ -179,7 +195,6 @@ class ProgramCatalog(basecatalog):
 			else:
 				print('Warning: Downloaded fresh data but did not save.')
 		print('Loaded ' + str(len(self._contents)) + ' programs')
-		
 
 if __name__ == '__main__':
 	print('program.py manager')
@@ -193,32 +208,25 @@ if __name__ == '__main__':
 		catalog.populate()
 	
 	while(True):
-		programs = catalog.search('name', input('Enter name of a program: '))
-		print('Results:')
 		program = None
+		programs = catalog.search('name', input('Search program by name, or press enter to list all: '))
 		if len(programs) > 1:
-			for k,v in enumerate(programs):
-				print(str(k + 1) + '. ' + v.name)
+			[print(f'{k}. {v.name}') for k,v in enumerate(programs, 1)]
 			try:
-				program = programs[int(input('Choose a program: ')) - 1]
+				program = programs[int(input('Choose from the results above by its number: ')) - 1]
 			except ValueError:
-				pass
-		if program == None:
-			print('No search results or error in input')
+				print('No program selected, returning to search')
 		else:
-			print(program.name)
-			print(program.id)
-			for k,v in enumerate(program.semesters):
-				print('Semester ' + str(k + 1) + ', ' + v.season + ' of ' + v.year + ' year (' + v.hours + ' hours)')
-				print('Courses:', end=' ')
-				for cr in v.courses:
-					print(cr, end=', ')
-				print('')
-				print('Misc:', end=' ')
-				for mi in v.misc:
-					print(mi, end=', ')
-				print('')
-				print('Others:', end=' ')
-				for ot in v.others:
-					print(ot, end=', ')
-				print('')
+			try:
+				program = programs[0]
+			except:
+				print('No results for your query.')
+		if program != None:
+			print('')
+			print(f'  Title: {program.name}')
+			print(f'    URL: {program.id}')
+			for semNum,sem in enumerate(program.semesters, 1):
+				print(f'    Semester {semNum}: {sem.season} of {sem.year} year ({sem.hours} hours)')
+				if(len(sem.courses)): print(f'      {', '.join([v for v in sem.courses])}')
+				if(len(sem.others)): print(f'      {'\n      '.join([v for v in sem.others])}')
+		print('')

@@ -1,14 +1,22 @@
 #!/usr/bin/python3
 
-#Catalog data access frontend
+# Provides organization and search functions.
 
-#https://www.atu.edu/catalog/archive/app/descriptions/catalog-data.php
-#	term: 202220, 200740 etc.
-#	subject: ELEG, MATH, STAT, ENGL etc.
-#	number: 4133, 1013 etc.
-#	campus: B (All), M (Russellville), 1 (Ozark)
+# A catalog is a fancy list.
+# Catalog() must be created by calling it with any object of the type the catalog expects to hold.
+# Then, Catalog.append() to add objects of that type into the catalog.
+#   Mismatched type will throw MismatchError.
+# Then, Catalog.search() to search in the catalog.
+#   First param is what aspect of the catalog contents to search.
+#     So if the catalog object has obj.name, search by it using 'name'
+#   Second param is what to search for.
+#			We only know how to search int, bool and str types, for now.
+#     If we don't know how to search for it, it'll throw SearchTypeNotImplementedError.
+#   Optionally, multi=True or False.
+#     If True, multiple results (if there are multiple) will be returned as a list.
+#     If False, only the first result found will be returned individually.
 
-#from lib import cache
+# See the test script at the bottom for usage.
 
 import requests
 import bs4 as bs
@@ -20,7 +28,7 @@ _url_terms = 'https://www.atu.edu/catalog/archive/app/descriptions/index.php'
 class Catalog:
 	class MismatchError(Exception):
 		def __init__(self, got, want):
-			self.message = 'got \'' + type(got).__name__ + '\' expected \'' + str(want) +'\''
+			self.message = 'got \'' + type(got).__name__ + '\', needs to be \'' + str(want) +'\''
 		def __str__(self):
 			return self.message
 	class SearchTypeNotImplementedError(Exception):
@@ -32,7 +40,7 @@ class Catalog:
 		if type(obj).__name__ != self._type:
 			raise self.MismatchError(obj, self._type)
 		self._contents.append(obj)
-	def search(self, aspect, query, multi='true'):
+	def search(self, aspect, query, multi=True):
 		result = []
 		for item in self._contents:
 			test = getattr(item, aspect)
@@ -49,42 +57,6 @@ class Catalog:
 			return result if multi else result[0]
 		except IndexError:
 			return None
-		
-#Classes
-class Term:
-	def __init__(self, id, name='null'):
-		self.name = name
-		self.id = self._check(id)
-	def _check(self, id):
-		if not isinstance(id, str):
-			raise Exception('got ' + str(type(id)) + ', requires <class \'str\'>')
-		if int(id[:4]) < 2007:
-			raise Exception('invalid term year ' + id)
-		return id
-
-class Course:
-	def __init__(self, name, id):
-		self.name = name
-		self.id = self._check(id)
-		self.desc = ''
-	def _check(self, id):
-		if not isinstance(id, str):
-			raise Exception('got ' + str(type(id)) + ', requires <class \'str\'>')
-		if len(id) != 4:
-			raise Exception('invalid course id ' + id)
-		return id
-
-class Subject:
-	def __init__(self, name='null', id='0000'):
-		self.name = name
-		self.id = self._check(id)
-	def _check(self, id):
-		if not isinstance(id, str):
-			raise Exception('got ' + str(type(id)) + ', requires <class \'str\'>')
-		if len(id) > 4:
-			raise Exception('invalid subject code ' + id)
-		return id
-	
 
 if __name__ == '__main__':
 	print('testing catalog.py, see script for routine')
@@ -108,17 +80,18 @@ if __name__ == '__main__':
 	speakfoo = catalog.search('name', 'al', multi=False)
 	speakfoo.speak()
 	
-	print('number of isPerson (should be 2): ', end='')
+	print('number of entries that have isPerson (should be 2): ', end='')
 	print(len(catalog.search('isPerson', True)))
 	
 	class bar:
 		pass
+
 	newbar = bar()
-	print('attempt to add different class (should fail):', end=' ')
-	try:
-		catalog.append(newbar)
-	except Catalog.MismatchError:
-		print('task failed successfully')
+	
+	print('attempt to add different class (should fail):')
+	catalog.append(newbar)
+	
+	print('if you see this, something is wrong')
 else:
 	try:
 		from . import cache

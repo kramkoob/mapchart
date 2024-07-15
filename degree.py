@@ -42,11 +42,14 @@ class Semester():
 		self.season = season
 		self.courses = []
 		self.others = []
+		self.electives = []
 		self.hours = None
 	def add_course(self, name, id):
 		self.courses.append(name + ' ' + id)
 	def add_other(self, name):
-		self.others.append(name)
+		if len(name): self.others.append(name)
+	def add_elective(self, name):
+		if len(name): self.electives.append(name)
 	def set_hours(self, hours):
 		hours = ''.join([ch if ch.isalnum() else '' for ch in hours])
 		self.hours = int(hours[-2:])
@@ -75,28 +78,35 @@ class Program():
 				course_containers.pop(0) #remove first tr (header)
 				for course_container in course_containers:
 					try:
+						# if this row is a total hours indicator, add that number to the semester
 						if course_container.find('strong').get_text() == "Total Hours":
 							try:
 								semester.set_hours(course_container.find_all('td')[1].find('strong').get_text())
 							except ValueError:
-								print(f"Warning: Could not obtain hours for {season} semester of {year} year in {self.name}")
+								print(f"Warning: No hours given for {season} semester of {year} year in {self.name}")
 								semester.set_hours("0")
 					except AttributeError:
+						# each anchor tag has info embedded w/ more catalog info (incl. prerequisites)
 						course_links = course_container.find_all('a')
 						for course_link in course_links:
 							course_name = course_link.get_text()
 							course_subject = course_name.split(' ')[0]
 							course_id = course_name.split(' ')[1]
 							try:
+								# these anchor tags are valid courses
 								if course_subject.upper() == course_subject and str(int(course_id)) == course_id:
 									semester.add_course(course_subject, course_id)
 								else:
 									print(f"Warning: Add course failed for {course_name} {course_subject} {course_id} in {self.name}, semester {season} of {year} year, but did not throw ValueError")
 							except ValueError:
+								# these anchor tags are usually subject-specific electives
 								if course_id.count('X') > 2:
 									semester.add_other(course_name)
 								else:
 									print('Warning: Absolutely unsure what to do with' + course_name)
+						# if there were no anchor tags, this is probably a technical/etc. elective
+						if len(course_links) == 0:
+							semester.add_elective(' '.join(''.join([c if (c.isalpha() or c == ' ')  else '' for c in course_container.find('td').get_text()]).split()))
 
 class ProgramCatalog(basecatalog):
 	def __init__(self):
@@ -110,7 +120,7 @@ class ProgramCatalog(basecatalog):
 		for accordionelement in accordionelements:
 			# create program
 			# name found from h1 header at top of page
-			program_name = programpage.find('div', 'col-lg-8 mb-5').find('h1').get_text()
+			program_name = ' '.join(programpage.find('div', 'col-lg-8 mb-5').find('h1').get_text().split())
 			# id is the link to the program page
 			program_id = programlink
 			_program = Program(program_id, program_name)
@@ -220,4 +230,5 @@ if __name__ == '__main__':
 				print(f'    Semester {semNum}: {sem.season} of {sem.year} year ({sem.hours} hours)')
 				if(len(sem.courses)): print(f'      {', '.join([v for v in sem.courses])}')
 				if(len(sem.others)): print(f'      {'\n      '.join([v for v in sem.others])}')
+				if(len(sem.electives)): print(f'      {'\n      '.join([v for v in sem.electives])}')
 		print('')

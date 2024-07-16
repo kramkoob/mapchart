@@ -18,8 +18,11 @@
 #		Attributes: year, season, courses, others, hours
 #			year is what student academic year, e.g. Freshman, Junior etc.
 #			season is which half of the year - either Fall or Spring
-#			courses is a list of strings (for now) of course names.
+#			courses is a list of strings of course names.
+#			courses_descs is a corresponding list of catalog info e.g. prerequisites
 #			others is a list of other things, like "fine arts and humanities" or "SS 1XXX Social Studies" etc.
+#			others_descs is a corresponding list of catalog info e.g. what courses can be taken to fulfill the elective
+#			electives: similar to others but the data wasn't as easily extractable
 #			hours is how many hours the website gives in their tally for credit hours in the semester.
 
 try:
@@ -41,13 +44,18 @@ class Semester():
 		self.year = year
 		self.season = season
 		self.courses = []
+		self.courses_descs = []
 		self.others = []
+		self.others_descs = []
 		self.electives = []
 		self.hours = None
-	def add_course(self, name, id):
+	def add_course(self, name, id, desc):
 		self.courses.append(name + ' ' + id)
-	def add_other(self, name):
-		if len(name): self.others.append(name)
+		self.courses_descs.append(desc)
+	def add_other(self, name, desc):
+		if len(name):
+			self.others.append(name)
+			self.others_descs.append(desc)
 	def add_elective(self, name):
 		if len(name): self.electives.append(name)
 	def set_hours(self, hours):
@@ -92,16 +100,17 @@ class Program():
 							course_name = course_link.get_text()
 							course_subject = course_name.split(' ')[0]
 							course_id = course_name.split(' ')[1]
+							course_desc = '\n'.join(bs.BeautifulSoup(course_link['data-body'], 'lxml').find('desc').decode_contents().split(r'<br/>'))
 							try:
 								# these anchor tags are valid courses
 								if course_subject.upper() == course_subject and str(int(course_id)) == course_id:
-									semester.add_course(course_subject, course_id)
+									semester.add_course(course_subject, course_id, course_desc)
 								else:
 									print(f"Warning: Add course failed for {course_name} {course_subject} {course_id} in {self.name}, semester {season} of {year} year, but did not throw ValueError")
 							except ValueError:
 								# these anchor tags are usually subject-specific electives
 								if course_id.count('X') > 2:
-									semester.add_other(course_name)
+									semester.add_other(course_name, course_desc)
 								else:
 									print('Warning: Absolutely unsure what to do with' + course_name)
 						# if there were no anchor tags, this is probably a technical/etc. elective
@@ -198,13 +207,13 @@ class ProgramCatalog(basecatalog):
 		print('Loaded ' + str(len(self._contents)) + ' programs')
 
 if __name__ == '__main__':
-	print('program.py manager')
+	print('degree.py test')
 	catalog = ProgramCatalog()
 	
-	choice = str(input('force refresh? y/n: ')).lower()
+	choice = str(input('force refresh? y/[n]: ')).lower()
 	if choice == 'y':
-		choice = str(input('save locally? y/n: ')).lower()
-		catalog.populate(force=True,save=choice=='y')
+		choice = str(input('save locally? [y]/n: ')).lower()
+		catalog.populate(force=True,save=choice!='n')
 	else:
 		catalog.populate()
 	

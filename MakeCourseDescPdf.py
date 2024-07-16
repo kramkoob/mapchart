@@ -2,9 +2,7 @@
 
 #Create simple PDFs containing a course's information from the catalog
 
-#Library used: pdfkit (aur: python-pdfkit, which requires aur: wkhtmltopdf, which requires aur: qt5-webkit): Create PDF files from HTML templates
-
-# wkhtmltopdf is only detected on Linux at the moment. May be adjusted in the future, but the absolute path importing is lame.
+#Libraries: pdfkit, wkhtmltopdf, jinja2
 
 '''
 Sample course list for Electrical Engineering:

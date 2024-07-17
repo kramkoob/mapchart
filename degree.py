@@ -44,13 +44,15 @@ class Semester():
 		self.year = year
 		self.season = season
 		self.courses = []
+		self.courses_titles = []
 		self.courses_descs = []
 		self.others = []
 		self.others_descs = []
 		self.electives = []
 		self.hours = None
-	def add_course(self, name, id, desc):
+	def add_course(self, name, id, title, desc):
 		self.courses.append(name + ' ' + id)
+		self.courses_titles.append(title)
 		self.courses_descs.append(desc)
 	def add_other(self, name, desc):
 		if len(name):
@@ -100,11 +102,12 @@ class Program():
 							course_name = course_link.get_text()
 							course_subject = course_name.split(' ')[0]
 							course_id = course_name.split(' ')[1]
+							course_title = course_name.split(f'{course_subject} {course_id} ')[1]
 							course_desc = '\n'.join(bs.BeautifulSoup(course_link['data-body'], 'lxml').find('desc').decode_contents().split(r'<br/>'))
 							try:
 								# these anchor tags are valid courses
 								if course_subject.upper() == course_subject and str(int(course_id)) == course_id:
-									semester.add_course(course_subject, course_id, course_desc)
+									semester.add_course(course_subject, course_id, course_title, course_desc)
 								else:
 									print(f"Warning: Add course failed for {course_name} {course_subject} {course_id} in {self.name}, semester {season} of {year} year, but did not throw ValueError")
 							except ValueError:
@@ -237,7 +240,7 @@ if __name__ == '__main__':
 			print(f'    URL: {program.id}')
 			for semNum,sem in enumerate(program.semesters, 1):
 				print(f'    Semester {semNum}: {sem.season} of {sem.year} year ({sem.hours} hours)')
-				if(len(sem.courses)): print(f'      {', '.join([v for v in sem.courses])}')
+				if(len(sem.courses)): print(f'      {', '.join([f'{v} {v2}' for v, v2 in zip(sem.courses, sem.courses_titles)])}')
 				if(len(sem.others)): print(f'      {'\n      '.join([v for v in sem.others])}')
 				if(len(sem.electives)): print(f'      {'\n      '.join([v for v in sem.electives])}')
 		print('')
